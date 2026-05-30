@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Enemy Gunting
+  m_Controller: {fileID: 9100000, guid: 401ff70c8940aca4db7696b55ebfb4d2, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 748e9b20f060ae44ca70c9b32191c003, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: a8fb1737379bb9e49916b76425da67d8, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 6228ccd920c4c0d439b03180d9c79045, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 452dbeab6c228274cb5ac54ccf01e8ee, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 806030a0c556abf479ce82998c5c377c, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 781c160d6e239724a835dd20d469d216, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 7e5566fd8ed43a04596fab21c7264d6b, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 325101302abaaf34fac4445345710e2f, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: e4f66dc3791d57e4da215df7f5d53048, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 4be268440494ecc47b29539eacad7030, type: 2}
