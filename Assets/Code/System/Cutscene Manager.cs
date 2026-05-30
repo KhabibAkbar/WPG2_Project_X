@@ -13,6 +13,9 @@ public class CutsceneManager : MonoBehaviour
     public MovementP1 movementP1;
     public MovementP2 movementP2;
 
+    private Rigidbody2D rbP1;
+    private Rigidbody2D rbP2;
+
     [Header("Animasi Setup")]
     public Animator animP1;
     public Animator animP2;
@@ -20,7 +23,6 @@ public class CutsceneManager : MonoBehaviour
     public float animWaitTime = 1.0f; 
 
     [Header("Camera & Bounds Setup")]
-    [Tooltip("Masukkan Collider2D yang menutupi seluruh map abu-abu sebagai batas")]
     public Collider2D mapBounds; 
     public float cinematicZoomSize = 3.5f;
     public float cameraTransitionDuration = 0.5f; 
@@ -43,38 +45,50 @@ public class CutsceneManager : MonoBehaviour
         originalCamPos = mainCam.transform.position;
         originalCamSize = mainCam.orthographicSize;
 
+        if (player1 != null) rbP1 = player1.GetComponent<Rigidbody2D>();
+        if (player2 != null) rbP2 = player2.GetComponent<Rigidbody2D>();
+
         StartCoroutine(StartCutsceneSequence());
     }
 
     IEnumerator StartCutsceneSequence()
     {
-        // 0. BERSIHKAN UI YANG BOCOR SAAT START
         if (dialogue != null) dialogue.CloseDialogue(); 
 
-        // 1. KUNCI PERGERAKAN PLAYER
-        if (movementP1 != null) movementP1.enabled = false;
-        if (movementP2 != null) movementP2.enabled = false;
+        // 1. KUNCI INPUT PERGERAKAN
+        if (movementP1 != null) movementP1.SetCutsceneLock(true);
+        if (movementP2 != null) movementP2.SetCutsceneLock(true);
 
-        // 2. TUNGGU FADE MANAGER SELESAI MEMBUKA LAYAR
+        // 2. TAHAN GRAVITASI 
+        if (rbP1 != null) rbP1.simulated = false;
+        if (rbP2 != null) rbP2.simulated = false;
+
+        // 3. TUNGGU FADE MANAGER SELESAI
         if (FadeManager.instance != null)
         {
             yield return new WaitUntil(() => FadeManager.instance.isFading == false);
-            yield return new WaitForSeconds(0.2f); // Jeda bernapas sedikit sebelum kamera jalan
+            yield return new WaitForSeconds(0.2f); 
         }
 
-        // 3. SEQUENCE PLAYER 1 (Zoom -> Animasi -> Dialog)
+        // 4. SEQUENCE PLAYER 1 
         if (player1 != null)
         {
-            // Panning & Zoom ke P1
+            // Zoom ke P1
             yield return StartCoroutine(MoveAndZoomCamera(player1.position, cinematicZoomSize, cameraTransitionDuration));
             
-            // Trigger Animasi Jatuh & Suara (dari Animation Event)
-            if (animP1 != null) animP1.SetTrigger(dropAnimTrigger);
+            // Aktifkan gravitasi P1
+            if (rbP1 != null) rbP1.simulated = true;
+
+            // [DIPERBARUI] Tunggu sampai Player 1 benar-benar menyentuh tanah
+            if (movementP1 != null) 
+                yield return new WaitUntil(() => movementP1.isGrounded == true);
+            else 
+                yield return new WaitForSeconds(0.5f); // Fallback jika script tidak ada
             
-            // Tunggu animasi selesai
+            // Setelah menyentuh tanah, baru panggil animasi Land
+            if (animP1 != null) animP1.SetTrigger(dropAnimTrigger);
             yield return new WaitForSeconds(animWaitTime);
 
-            // Dialog P1
             if (blurEffect != null) blurEffect.SetActive(true);
             dialogue.ShowDialogue(dialogP1, spriteP1, true);
             yield return new WaitUntil(() => dialogue.selesai);
@@ -83,19 +97,25 @@ public class CutsceneManager : MonoBehaviour
             yield return new WaitForSeconds(0.2f); 
         }
 
-        // 4. SEQUENCE PLAYER 2 (Zoom -> Animasi -> Dialog)
+        // 5. SEQUENCE PLAYER 2
         if (player2 != null && spriteP2 != null)
         {
-            // Panning Kamera ke P2
+            // Pan & Zoom Kamera ke P2 
             yield return StartCoroutine(MoveAndZoomCamera(player2.position, cinematicZoomSize, cameraTransitionDuration));
             
-            // Trigger Animasi Jatuh
-            if (animP2 != null) animP2.SetTrigger(dropAnimTrigger);
+            // Aktifkan gravitasi P2
+            if (rbP2 != null) rbP2.simulated = true;
+
+            // [DIPERBARUI] Tunggu sampai Player 2 menyentuh tanah (tanah P2 ada di atas)
+            if (movementP2 != null) 
+                yield return new WaitUntil(() => movementP2.isGrounded == true);
+            else 
+                yield return new WaitForSeconds(0.5f); // Fallback jika script tidak ada
             
-            // Tunggu animasi selesai
+            // Setelah menyentuh tanah, baru panggil animasi Land
+            if (animP2 != null) animP2.SetTrigger(dropAnimTrigger);
             yield return new WaitForSeconds(animWaitTime);
 
-            // Dialog P2
             if (blurEffect != null) blurEffect.SetActive(true);
             dialogue.ShowDialogue(dialogP2, spriteP2, false);
             yield return new WaitUntil(() => dialogue.selesai);
@@ -104,15 +124,16 @@ public class CutsceneManager : MonoBehaviour
             yield return new WaitForSeconds(0.2f);
         }
 
-        // 5. ZOOM OUT KEMBALI KE TAMPILAN PENUH
+        // 6. ZOOM OUT KEMBALI & MULAI GAMEPLAY
         yield return StartCoroutine(MoveAndZoomCamera(originalCamPos, originalCamSize, cameraTransitionDuration));
 
-        // 6. MULAI GAMEPLAY
-        if (movementP1 != null) movementP1.enabled = true;
-        if (movementP2 != null) movementP2.enabled = true;
+        if (movementP1 != null) movementP1.SetCutsceneLock(false);
+        if (movementP2 != null) movementP2.SetCutsceneLock(false);
+        
+        if (rbP1 != null) rbP1.simulated = true;
+        if (rbP2 != null) rbP2.simulated = true;
     }
 
-    // Fungsi Zoom & Pan dengan Map Bounds Collider2D
     IEnumerator MoveAndZoomCamera(Vector3 targetPosition, float targetSize, float duration)
     {
         Vector3 startPos = mainCam.transform.position;

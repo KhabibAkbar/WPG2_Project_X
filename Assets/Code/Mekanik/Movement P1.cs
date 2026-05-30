@@ -24,7 +24,7 @@ public class MovementP1 : MonoBehaviour
 
     private Rigidbody2D rb;
     private float moveInput;
-    private bool isGrounded;
+    public bool isGrounded;
     private bool isDorong;
 
     public LayerMask pushLayer;
@@ -43,6 +43,8 @@ public class MovementP1 : MonoBehaviour
     // Tambahan untuk Teleport Lock
     private bool isTeleporting = false;
 
+    private bool isCutscene = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -60,6 +62,18 @@ public class MovementP1 : MonoBehaviour
         if (state)
         {
             rb.linearVelocity = Vector2.zero;
+            moveInput = 0;
+            lastLockedInput = 0;
+        }
+    }
+
+    public void SetCutsceneLock(bool state)
+    {
+        isCutscene = state;
+        if (state)
+        {
+            // Hanya hentikan pergerakan X, gravitasi (Y) tetap jalan
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             moveInput = 0;
             lastLockedInput = 0;
         }
@@ -146,7 +160,7 @@ public class MovementP1 : MonoBehaviour
     {
         if (GameManager.instance != null && GameManager.instance.isGameOver)
         {
-            rb.linearVelocity = Vector2.zero;
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 

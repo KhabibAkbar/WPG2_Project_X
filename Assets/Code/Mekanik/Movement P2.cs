@@ -24,7 +24,7 @@ public class MovementP2 : MonoBehaviour
 
     private Rigidbody2D rb;
     private float moveInput;
-    private bool isGrounded;
+    public bool isGrounded;
     private bool isDorong;
 
     public LayerMask pushLayer;
@@ -42,6 +42,9 @@ public class MovementP2 : MonoBehaviour
 
     // Tambahan untuk Teleport Lock agar sama dengan P1
     private bool isTeleporting = false;
+    
+    // [BARU] Variabel khusus untuk Cutscene / Switch Player
+    private bool isCutscene = false;
 
     void Start()
     {
@@ -57,7 +60,7 @@ public class MovementP2 : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    // Fungsi untuk dipanggil dari script Teleport
+    // Fungsi asli untuk Teleport (TIDAK DIUBAH)
     public void SetTeleportLock(bool state)
     {
         isTeleporting = state;
@@ -69,13 +72,26 @@ public class MovementP2 : MonoBehaviour
         }
     }
 
+    // [BARU] Fungsi khusus untuk dipanggil dari Cutscene Manager / saat ganti Player
+    public void SetCutsceneLock(bool state)
+    {
+        isCutscene = state;
+        if (state)
+        {
+            // Hanya hentikan pergerakan X, gravitasi (Y) tetap jalan
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            moveInput = 0;
+            lastLockedInput = 0;
+        }
+    }
+
     void Update()
     {
         if (GameManager.instance != null && GameManager.instance.isGameOver)
             return;
 
-        // Cegah input jika sedang teleport
-        if (isTeleporting) return;
+        // [DIPERBARUI] Cegah input jika sedang teleport ATAU cutscene
+        if (isTeleporting || isCutscene) return;
 
         if (inputBufferTimer > 0)
         {
@@ -147,21 +163,23 @@ public class MovementP2 : MonoBehaviour
 
     void FixedUpdate()
     {
+        // [DIPERBARUI] Fix Game Over agar tetap jatuh ditarik gravitasi
         if (GameManager.instance != null && GameManager.instance.isGameOver)
         {
-            rb.linearVelocity = Vector2.zero;
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 
         CheckGrounded();
 
-        // Unlock jika menyentuh tanah (tanah P2 ada di atas)
+        // Unlock jika menyentuh tanah (tanah P2 ada di atas) - Khusus Teleport
         if (isTeleporting && isGrounded)
         {
             isTeleporting = false;
         }
 
-        if (isTeleporting)
+        // [DIPERBARUI] Terapkan penahanan kecepatan X jika sedang teleport ATAU cutscene
+        if (isTeleporting || isCutscene)
         {
             rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
             return;
