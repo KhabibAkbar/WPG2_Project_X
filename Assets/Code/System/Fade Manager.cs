@@ -10,7 +10,8 @@ public class FadeManager : MonoBehaviour
     public Image fadeImage;
     public float fadeSpeed = 2f;
 
-    bool isFading = false;
+    // SUDAH DIPERBAIKI: Menjadi public
+    public bool isFading = false;
 
     void Awake()
     {
@@ -90,16 +91,12 @@ public class FadeManager : MonoBehaviour
         StartCoroutine(LoadSceneRoutine(sceneIndex));
     }
 
-    // --- VERSI PERBAIKAN: TANPA MENGHAPUS KODE LAMA ---
     IEnumerator LoadSceneRoutine(int sceneIndex)
     {
-        // Tambahan: Tunggu 0.1 detik agar SFX 'Next' sempat terpicu
         yield return new WaitForSeconds(0.1f);
 
         if (AudioManager.instance != null)
         {
-            // Kita biarkan sfxSource tetap jalan agar suara "Next" tidak terpotong
-            // Tapi kita kunci blockAllSFX agar tidak ada suara baru yang masuk saat transisi
             AudioManager.instance.blockAllSFX = true;
             AudioManager.instance.StopLoopingSFX();
         }
@@ -116,7 +113,6 @@ public class FadeManager : MonoBehaviour
 
     IEnumerator LoadSceneRoutine(string sceneName)
     {
-        // Tambahan: Tunggu 0.1 detik
         yield return new WaitForSeconds(0.1f);
 
         if (AudioManager.instance != null)

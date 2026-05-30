@@ -809,6 +809,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDataHandler
   continueButton: {fileID: 2061348932}
+  mainUIBackground: {fileID: 1743192930}
+  menuButtonsContainer: {fileID: 698943849}
+  zoomMultiplier: 1.5
+  animationDuration: 1.2
 --- !u!4 &296170403
 Transform:
   m_ObjectHideFlags: 0
@@ -1006,6 +1010,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9fb9b08bd480644690a1769ee728a5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIMainMenu
+  mainUIBackground: {fileID: 1743192930}
+  zoomMultiplier: 1.5
+  animationDuration: 1.2
+  menuButtonsContainer: {fileID: 698943849}
 --- !u!114 &378743622
 MonoBehaviour:
   m_ObjectHideFlags: 0

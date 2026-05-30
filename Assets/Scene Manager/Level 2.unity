@@ -128,7 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7476092}
-  - component: {fileID: 7476091}
+  - component: {fileID: 7476093}
   m_Layer: 0
   m_Name: Cutscene Manager
   m_TagString: Untagged
@@ -136,31 +136,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &7476091
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7476090}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94773496ae281e64a9daf4cf742e5ac3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cam: {fileID: 1251153980}
-  player1: {fileID: 2146811092}
-  player2: {fileID: 0}
-  middlePoint: {fileID: 1251153981}
-  movementP1: {fileID: 2146811091}
-  movementP2: {fileID: 0}
-  dialogue: {fileID: 1608195650}
-  spriteP1: {fileID: -6638949777294083288, guid: b2406e366bd80fe49a56a261325f5ffc, type: 3}
-  spriteP2: {fileID: 0}
-  dialogP1: Aku sudah berada di dalam castle sekarang, aku terjebak dan aku harus
-    bisa mencari jalan keluar dari castle ini !!!!
-  dialogP2: 
-  blurEffect: {fileID: 0}
 --- !u!4 &7476092
 Transform:
   m_ObjectHideFlags: 0
@@ -176,6 +151,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7476093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7476090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94773496ae281e64a9daf4cf742e5ac3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CutsceneManager
+  mainCam: {fileID: 1251153980}
+  player1: {fileID: 2146811092}
+  player2: {fileID: 0}
+  movementP1: {fileID: 2146811091}
+  movementP2: {fileID: 0}
+  animP1: {fileID: 2146811096}
+  animP2: {fileID: 0}
+  dropAnimTrigger: Land
+  animWaitTime: 1
+  mapBounds: {fileID: 1661665547}
+  cinematicZoomSize: 5
+  cameraTransitionDuration: 0.5
+  dialogue: {fileID: 1608195650}
+  spriteP1: {fileID: 0}
+  spriteP2: {fileID: 0}
+  dialogP1: Aku sudah berada di dalam castle sekarang, aku terjebak dan aku harus
+    bisa mencari jalan keluar dari castle ini !!!!
+  dialogP2: 
+  blurEffect: {fileID: 0}
 --- !u!1 &17414045
 GameObject:
   m_ObjectHideFlags: 0
@@ -657,6 +663,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jumlahPlayer: 1
+  nextSFXName: Next
 --- !u!212 &132773163
 SpriteRenderer:
   serializedVersion: 2
@@ -6529,7 +6536,7 @@ RectTransform:
   m_GameObject: {fileID: 577883721}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.0149785, y: 1.0149785, z: 1.0149785}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 331443018}
@@ -6539,7 +6546,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -78, y: -388}
+  m_AnchoredPosition: {x: 38, y: -388}
   m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &577883723
@@ -18144,6 +18151,84 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1661665546
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1661665548}
+  - component: {fileID: 1661665547}
+  m_Layer: 0
+  m_Name: Map Bound P1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!61 &1661665547
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1661665546}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 17.293898, y: 4.256979}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 35.587795, y: 20.013733}
+  m_EdgeRadius: 0
+--- !u!4 &1661665548
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1661665546}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -17.22, y: -4.25, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1684655948
 GameObject:
   m_ObjectHideFlags: 0
@@ -20384,6 +20469,7 @@ GameObject:
   - component: {fileID: 2146811093}
   - component: {fileID: 2146811096}
   - component: {fileID: 2146811097}
+  - component: {fileID: 2146811098}
   m_Layer: 3
   m_Name: Player1
   m_TagString: Player
@@ -20620,8 +20706,8 @@ MonoBehaviour:
     m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
-  m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 4
+  m_PointLightInnerRadius: 1
+  m_PointLightOuterRadius: 2
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -20632,6 +20718,18 @@ MonoBehaviour:
   - {x: 0.5, y: -0.5, z: 0}
   - {x: 0.5, y: 0.5, z: 0}
   - {x: -0.5, y: 0.5, z: 0}
+--- !u!114 &2146811098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2146811090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19ddd5ebfb494b4183293d1ec189dbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSoundAnimator
 --- !u!1 &2147309356
 GameObject:
   m_ObjectHideFlags: 0
@@ -20796,3 +20894,4 @@ SceneRoots:
   - {fileID: 531360707}
   - {fileID: 7476092}
   - {fileID: 1608195649}
+  - {fileID: 1661665548}
