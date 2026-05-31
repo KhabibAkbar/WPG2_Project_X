@@ -38,7 +38,7 @@ public class GameOverUI : MonoBehaviour
         }
 
         // 4. Baru pindah scene
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        FadeManager.instance.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void MainMenu()

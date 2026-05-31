@@ -78,8 +78,8 @@ public class PauseManager : MonoBehaviour
             p.PrepareForSceneTransition();
         }
 
-        // 4. Baru pindah scene
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        // 4. Baru pindah scene (Restart)
+        FadeManager.instance.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void OpenSettings()
