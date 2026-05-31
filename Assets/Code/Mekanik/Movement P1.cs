@@ -11,9 +11,12 @@ public class MovementP1 : MonoBehaviour
     public float footstepInterval = 0.4f;
     private float footstepTimer;
 
-    // Timer khusus mendorong agar suara berulang
     public float pushSFXInterval = 0.5f;
     private float pushSFXTimer;
+
+    [Header("Visual Effects")]
+    public ParticleSystem footstepParticles;
+    public ParticleSystem pushWindParticles; // Partikel angin saat mendorong
 
     public float jumpBufferTime = 0.1f;
     private float jumpBufferCounter;
@@ -40,12 +43,15 @@ public class MovementP1 : MonoBehaviour
 
     private Animator anim;
 
-    // Tambahan untuk Teleport Lock
     private bool isTeleporting = false;
+    
+    public bool isCutscene = false; 
+    public bool isGroundedForCutscene = false;
 
-    private bool isCutscene = false;
+    [Header("Cutscene Status")]
+    public bool isLocked = false; 
 
-    void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerCol = GetComponent<Collider2D>();
@@ -56,6 +62,24 @@ public class MovementP1 : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    // Dipanggil otomatis saat script dimatikan oleh CutsceneManager
+    void OnDisable()
+    {
+        if (footstepParticles != null)
+        {
+            var emFootstep = footstepParticles.emission;
+            emFootstep.enabled = false;
+            footstepParticles.Clear();
+        }
+
+        if (pushWindParticles != null)
+        {
+            var emWind = pushWindParticles.emission;
+            emWind.enabled = false;
+            pushWindParticles.Clear();
+        }
+    }
+
     public void SetTeleportLock(bool state)
     {
         isTeleporting = state;
@@ -64,23 +88,61 @@ public class MovementP1 : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
             moveInput = 0;
             lastLockedInput = 0;
+            
+            if (footstepParticles != null) footstepParticles.Clear();
+            if (pushWindParticles != null) pushWindParticles.Clear();
         }
     }
 
-    public void SetCutsceneLock(bool state)
+   public void SetCutsceneLock(bool state)
     {
-        isCutscene = state;
+        if (rb == null) rb = GetComponent<Rigidbody2D>();
+        if (anim == null) anim = GetComponent<Animator>();
+
+        isLocked = state; 
+        isCutscene = state; 
+        
         if (state)
         {
-            // Hanya hentikan pergerakan X, gravitasi (Y) tetap jalan
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-            moveInput = 0;
-            lastLockedInput = 0;
+            if (footstepParticles != null)
+            {
+                var em = footstepParticles.emission;
+                em.enabled = false;
+                footstepParticles.Clear();
+            }
+            if (pushWindParticles != null)
+            {
+                var em = pushWindParticles.emission;
+                em.enabled = false;
+                pushWindParticles.Clear();
+            }
+        }
+        
+        if (rb != null) 
+        {
+            if (state) 
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.simulated = false; 
+            }
+            else
+            {
+                rb.simulated = true;  
+            }
+        }
+        
+        if (anim != null)
+        {
+            anim.SetFloat("Speed", 0); 
         }
     }
 
     void Update()
     {
+        HandleParticleEmission();
+
+        if (isLocked) return; 
+        
         if (GameManager.instance != null && GameManager.instance.isGameOver)
             return;
 
@@ -119,7 +181,6 @@ public class MovementP1 : MonoBehaviour
             }
         }
 
-        // --- LOGIKA SUARA LANGKAH KAKI (Hanya bunyi jika tidak sedang mendorong) ---
         if (isGrounded && moveInput != 0 && !isDorong)
         {
             footstepTimer -= Time.deltaTime;
@@ -144,16 +205,70 @@ public class MovementP1 : MonoBehaviour
         UpdateAnimation();
     }
 
+    void HandleParticleEmission()
+    {
+        // 1. LOGIKA PARTIKEL PIJAKAN KAKI
+        if (footstepParticles != null)
+        {
+            if (!footstepParticles.isPlaying) footstepParticles.Play();
+
+            var footstepEmission = footstepParticles.emission;
+            
+            if (isLocked || isTeleporting || isCutscene)
+            {
+                footstepEmission.enabled = false;
+            }
+            else
+            {
+                // Matikan debu kaki saat sedang mendorong agar visual tidak berantakan
+                footstepEmission.enabled = isGrounded && !isDorong;
+            }
+        }
+
+        // 2. LOGIKA PARTIKEL ANGIN DORONG
+        if (pushWindParticles != null)
+        {
+            if (!pushWindParticles.isPlaying) pushWindParticles.Play();
+
+            var windEmission = pushWindParticles.emission;
+
+            if (isGrounded && !isLocked && !isTeleporting && !isCutscene && isDorong && moveInput != 0)
+            {
+                windEmission.enabled = true;
+
+                if (moveInput > 0) 
+                {
+                    pushWindParticles.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                    pushWindParticles.transform.localPosition = new Vector3(0.5f, 0, 0); 
+                }
+                else if (moveInput < 0) 
+                {
+                    pushWindParticles.transform.localRotation = Quaternion.Euler(0, 180, 0);
+                    pushWindParticles.transform.localPosition = new Vector3(-0.5f, 0, 0); 
+                }
+            }
+            else
+            {
+                windEmission.enabled = false;
+            }
+        }
+    }
+
     void UpdateAnimation()
     {
         if (anim == null) return;
 
         anim.SetFloat("Speed", Mathf.Abs(moveInput));
 
+        // Partikel kaki tidak di-flip manual lagi. Pastikan bentuk partikel kaki sudah diubah ke 'Box' di Editor
         if (moveInput > 0)
+        {
             anim.SetBool("FacingRight", true);
+        }
         else if (moveInput < 0)
+        {
             anim.SetBool("FacingRight", false);
+        }
     }
 
     void FixedUpdate()
@@ -179,7 +294,6 @@ public class MovementP1 : MonoBehaviour
 
         CheckDorong();
 
-        // --- LOGIKA SUARA MENDORONG (BERULANG) ---
         if (isDorong && moveInput != 0)
         {
             pushSFXTimer -= Time.fixedDeltaTime;
@@ -212,6 +326,22 @@ public class MovementP1 : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             jumpBufferCounter = 0;
+            
+            // Matikan semua partikel langsung saat melompat
+            isGrounded = false; 
+            
+            if (footstepParticles != null) 
+            {
+                var emFootstep = footstepParticles.emission;
+                emFootstep.enabled = false; 
+            }
+            
+            if (pushWindParticles != null) 
+            {
+                var emWind = pushWindParticles.emission;
+                emWind.enabled = false;
+            }
+
             PlaySFX("Player Jump");
         }
     }
@@ -296,6 +426,14 @@ public class MovementP1 : MonoBehaviour
             nahanPlatform = false;
             kenaDorongKiri = false;
             kenaDorongKanan = false;
+        }
+    }
+
+    void OnCollisonEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGroundedForCutscene = true;
         }
     }
 }

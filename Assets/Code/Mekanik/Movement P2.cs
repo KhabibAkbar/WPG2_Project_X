@@ -46,7 +46,15 @@ public class MovementP2 : MonoBehaviour
     // [BARU] Variabel khusus untuk Cutscene / Switch Player
     private bool isCutscene = false;
 
-    void Start()
+    public bool isGroundedForCutscene = false;
+
+    [Header("Cutscene Status")]
+    public bool isLocked = false; // <--- Tambahkan baris ini
+
+    [Header("Visual Effects")]
+    public ParticleSystem footstepParticles; // <--- Variabel Partikel Asap
+
+    void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerCol = GetComponent<Collider2D>();
@@ -75,18 +83,34 @@ public class MovementP2 : MonoBehaviour
     // [BARU] Fungsi khusus untuk dipanggil dari Cutscene Manager / saat ganti Player
     public void SetCutsceneLock(bool state)
     {
-        isCutscene = state;
-        if (state)
+        // 1. PAKSA AMBIL KOMPONEN JIKA MASIH KOSONG (Solusi Balapan Waktu Awake)
+        if (rb == null) rb = GetComponent<Rigidbody2D>();
+        if (anim == null) anim = GetComponent<Animator>();
+
+        isLocked = state; 
+        
+        if (rb != null) 
         {
-            // Hanya hentikan pergerakan X, gravitasi (Y) tetap jalan
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-            moveInput = 0;
-            lastLockedInput = 0;
+            if (state) 
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.simulated = false; // Matikan gravitasi & fisika
+            }
+            else
+            {
+                rb.simulated = true;  // Hidupkan kembali
+            }
+        }
+        
+        if (anim != null)
+        {
+            anim.SetFloat("Speed", 0); 
         }
     }
 
     void Update()
     {
+        if (isLocked) return; // Cegah input jika sedang dikunci (cutscene atau teleport    )
         if (GameManager.instance != null && GameManager.instance.isGameOver)
             return;
 
@@ -126,6 +150,7 @@ public class MovementP2 : MonoBehaviour
                 lastLockedInput = 0;
             }
         }
+
         if (isGrounded && moveInput != 0 && !isDorong)
         {
             footstepTimer -= Time.deltaTime;
@@ -147,6 +172,7 @@ public class MovementP2 : MonoBehaviour
         jumpBufferCounter -= Time.deltaTime;
 
         UpdateAnimation();
+        HandleParticleEmission(); // <--- Pemanggilan fungsi efek uap
     }
 
     void UpdateAnimation()
@@ -310,6 +336,47 @@ public class MovementP2 : MonoBehaviour
             nahanPlatform = false;
             kenaDorongKiri = false;
             kenaDorongKanan = false;
+        }
+    }
+
+    void OnCollisonEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGroundedForCutscene = true;
+        }
+    }
+
+    // --- [BARU] Logika Particle System ---
+    void HandleParticleEmission()
+    {
+        if (footstepParticles == null) return;
+
+        var emission = footstepParticles.emission;
+
+        // Nyalakan partikel HANYA jika player sedang di tanah, bergerak, dan tidak didorong/terkunci
+        if (isGrounded && moveInput != 0 && !isDorong && !isLocked && !isTeleporting && !isCutscene)
+        {
+            emission.enabled = true;
+            if (!footstepParticles.isPlaying)
+            {
+                footstepParticles.Play();
+            }
+        }
+        else
+        {
+            // Matikan partikel jika berhenti, loncat, mendorong, atau kena lock
+            emission.enabled = false;
+        }
+    }
+
+    void OnDisable()
+    {
+        // Pastikan partikel mati otomatis jika objek player dimatikan
+        if (footstepParticles != null)
+        {
+            var emission = footstepParticles.emission;
+            emission.enabled = false;
         }
     }
 }

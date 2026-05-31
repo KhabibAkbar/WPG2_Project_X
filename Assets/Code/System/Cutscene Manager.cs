@@ -13,9 +13,6 @@ public class CutsceneManager : MonoBehaviour
     public MovementP1 movementP1;
     public MovementP2 movementP2;
 
-    private Rigidbody2D rbP1;
-    private Rigidbody2D rbP2;
-
     [Header("Animasi Setup")]
     public Animator animP1;
     public Animator animP2;
@@ -27,6 +24,10 @@ public class CutsceneManager : MonoBehaviour
     public float cinematicZoomSize = 3.5f;
     public float cameraTransitionDuration = 0.5f; 
 
+    [Header("UI Setup")]
+    [Tooltip("Masukkan semua panel UI (selain Dialog) yang ingin disembunyikan saat cutscene")]
+    public GameObject[] uiToHide; 
+
     [Header("Dialogue Setup")]
     public DialogueManager dialogue;
     public Sprite spriteP1;
@@ -34,9 +35,28 @@ public class CutsceneManager : MonoBehaviour
     [TextArea] public string dialogP1;
     [TextArea] public string dialogP2;
     public GameObject blurEffect;
+    
+    [Header("Timing Setup")]
+    [Tooltip("Waktu tunggu setelah layar terang sebelum mulai menyorot (Isi 1.6 jika ada gempa)")]
+    public float initialWaitTime = 0.2f; 
 
     private Vector3 originalCamPos;
     private float originalCamSize;
+
+    void Awake()
+    {
+        if (movementP1 != null) 
+        {
+            movementP1.enabled = false;
+            movementP1.SetCutsceneLock(true); 
+        }
+        
+        if (movementP2 != null) 
+        {
+            movementP2.enabled = false;
+            movementP2.SetCutsceneLock(true); 
+        }
+    }
 
     void Start()
     {
@@ -45,93 +65,111 @@ public class CutsceneManager : MonoBehaviour
         originalCamPos = mainCam.transform.position;
         originalCamSize = mainCam.orthographicSize;
 
-        if (player1 != null) rbP1 = player1.GetComponent<Rigidbody2D>();
-        if (player2 != null) rbP2 = player2.GetComponent<Rigidbody2D>();
-
         StartCoroutine(StartCutsceneSequence());
     }
 
     IEnumerator StartCutsceneSequence()
     {
+        // 0. BERSIHKAN UI DI AWAL
         if (dialogue != null) dialogue.CloseDialogue(); 
+        
+        // --- SEMBUNYIKAN SEMUA UI GAMEPLAY (ANTI-CRASH) ---
+        if (uiToHide != null)
+        {
+            foreach (GameObject ui in uiToHide)
+            {
+                if (ui != null) ui.SetActive(false);
+            }
+        }
+        // -------------------------------------
 
-        // 1. KUNCI INPUT PERGERAKAN
-        if (movementP1 != null) movementP1.SetCutsceneLock(true);
-        if (movementP2 != null) movementP2.SetCutsceneLock(true);
-
-        // 2. TAHAN GRAVITASI 
-        if (rbP1 != null) rbP1.simulated = false;
-        if (rbP2 != null) rbP2.simulated = false;
-
-        // 3. TUNGGU FADE MANAGER SELESAI
         if (FadeManager.instance != null)
         {
             yield return new WaitUntil(() => FadeManager.instance.isFading == false);
-            yield return new WaitForSeconds(0.2f); 
+            yield return new WaitForSeconds(initialWaitTime); 
         }
 
-        // 4. SEQUENCE PLAYER 1 
+        float maxWaitTime = 2.0f; 
+
+        // 2. SEQUENCE PLAYER 1
         if (player1 != null)
         {
-            // Zoom ke P1
             yield return StartCoroutine(MoveAndZoomCamera(player1.position, cinematicZoomSize, cameraTransitionDuration));
             
-            // Aktifkan gravitasi P1
-            if (rbP1 != null) rbP1.simulated = true;
-
-            // [DIPERBARUI] Tunggu sampai Player 1 benar-benar menyentuh tanah
             if (movementP1 != null) 
-                yield return new WaitUntil(() => movementP1.isGrounded == true);
-            else 
-                yield return new WaitForSeconds(0.5f); // Fallback jika script tidak ada
-            
-            // Setelah menyentuh tanah, baru panggil animasi Land
+            {
+                movementP1.isGroundedForCutscene = false; 
+                movementP1.SetCutsceneLock(false); 
+            }
+
+            float p1Timer = 0f;
+            while (movementP1 != null && !movementP1.isGroundedForCutscene && p1Timer < maxWaitTime)
+            {
+                p1Timer += Time.deltaTime;
+                yield return null; 
+            }
+
             if (animP1 != null) animP1.SetTrigger(dropAnimTrigger);
             yield return new WaitForSeconds(animWaitTime);
 
-            if (blurEffect != null) blurEffect.SetActive(true);
-            dialogue.ShowDialogue(dialogP1, spriteP1, true);
-            yield return new WaitUntil(() => dialogue.selesai);
-            if (blurEffect != null) blurEffect.SetActive(false);
+            if (dialogue != null)
+            {
+                if (blurEffect != null) blurEffect.SetActive(true);
+                dialogue.ShowDialogue(dialogP1, spriteP1, true);
+                yield return new WaitUntil(() => dialogue.selesai);
+                if (blurEffect != null) blurEffect.SetActive(false);
+            }
             
             yield return new WaitForSeconds(0.2f); 
         }
 
-        // 5. SEQUENCE PLAYER 2
+        // 3. SEQUENCE PLAYER 2
         if (player2 != null && spriteP2 != null)
         {
-            // Pan & Zoom Kamera ke P2 
             yield return StartCoroutine(MoveAndZoomCamera(player2.position, cinematicZoomSize, cameraTransitionDuration));
             
-            // Aktifkan gravitasi P2
-            if (rbP2 != null) rbP2.simulated = true;
-
-            // [DIPERBARUI] Tunggu sampai Player 2 menyentuh tanah (tanah P2 ada di atas)
             if (movementP2 != null) 
-                yield return new WaitUntil(() => movementP2.isGrounded == true);
-            else 
-                yield return new WaitForSeconds(0.5f); // Fallback jika script tidak ada
-            
-            // Setelah menyentuh tanah, baru panggil animasi Land
+            {
+                movementP2.isGroundedForCutscene = false; 
+                movementP2.SetCutsceneLock(false);
+            }
+
+            float p2Timer = 0f;
+            while (movementP2 != null && !movementP2.isGroundedForCutscene && p2Timer < maxWaitTime) 
+            {
+                p2Timer += Time.deltaTime;
+                yield return null;
+            }
+
             if (animP2 != null) animP2.SetTrigger(dropAnimTrigger);
             yield return new WaitForSeconds(animWaitTime);
 
-            if (blurEffect != null) blurEffect.SetActive(true);
-            dialogue.ShowDialogue(dialogP2, spriteP2, false);
-            yield return new WaitUntil(() => dialogue.selesai);
-            if (blurEffect != null) blurEffect.SetActive(false);
-
+            if (dialogue != null)
+            {
+                if (blurEffect != null) blurEffect.SetActive(true);
+                dialogue.ShowDialogue(dialogP2, spriteP2, false);
+                yield return new WaitUntil(() => dialogue.selesai);
+                if (blurEffect != null) blurEffect.SetActive(false);
+            }
             yield return new WaitForSeconds(0.2f);
         }
 
-        // 6. ZOOM OUT KEMBALI & MULAI GAMEPLAY
+        // 4. ZOOM OUT KEMBALI
         yield return StartCoroutine(MoveAndZoomCamera(originalCamPos, originalCamSize, cameraTransitionDuration));
 
-        if (movementP1 != null) movementP1.SetCutsceneLock(false);
-        if (movementP2 != null) movementP2.SetCutsceneLock(false);
-        
-        if (rbP1 != null) rbP1.simulated = true;
-        if (rbP2 != null) rbP2.simulated = true;
+        // 5. MULAI GAMEPLAY UTAMA
+        if (movementP1 != null) { movementP1.enabled = true; movementP1.SetCutsceneLock(false); }
+        if (movementP2 != null) { movementP2.enabled = true; movementP2.SetCutsceneLock(false); }
+
+        // --- MUNCULKAN KEMBALI SEMUA UI GAMEPLAY (ANTI-CRASH) ---
+        if (uiToHide != null)
+        {
+            foreach (GameObject ui in uiToHide)
+            {
+                if (ui != null) ui.SetActive(true);
+            }
+        }
+        // -------------------------------------------
     }
 
     IEnumerator MoveAndZoomCamera(Vector3 targetPosition, float targetSize, float duration)

@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "WPG 2.slnx",
+    "dotnet.defaultSolution": "WPG2_Project_X.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }
