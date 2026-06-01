@@ -98,6 +98,14 @@ public class DefenseSystem : MonoBehaviour
 
         if (Mathf.Abs(slider.value - targetSliderValue) <= defenseTolerance)
         {
+            if (battleController != null)
+            {
+                // Posisinya ditaruh tepat di posisi Slider pertahanan
+                if (battleController.perfectSpawnPoint != null)
+                    battleController.SpawnFloatingText("PERFECT!", Color.green, battleController.perfectSpawnPoint.position);
+                else
+                    battleController.SpawnFloatingText("PERFECT!", Color.green, slider.transform.position); // Fallback
+            }
             battleController.PlayerSuccessDefense();
         }
         else
@@ -158,6 +166,18 @@ public class DefenseSystem : MonoBehaviour
         float targetX = playerTr.position.x + playerWidth + enemyWidth + spacing;
         Vector3 attackPos = new Vector3(targetX, startPos.y, startPos.z);
 
+        // --- DINAMIKA KAMERA: Simpan keadaan awal kamera ---
+        Camera mainCam = Camera.main;
+        Vector3 camAwal = mainCam.transform.localPosition;
+        float camSizeAwal = mainCam.orthographic ? mainCam.orthographicSize : mainCam.fieldOfView;
+
+        // Kamera ikut Zoom In ke arah koordinat serangan musuh (Durasi 0.2 detik)
+        if (battleController != null)
+        {
+            battleController.StartCoroutine(battleController.CinematicActionPan(attackPos, 0.85f, 0.2f));
+        }
+        // --------------------------------------------------
+
         // 1. MAJU
         float moveSpeed = 50f;
         while (Vector3.Distance(enemyTr.position, attackPos) > 0.1f)
@@ -171,14 +191,31 @@ public class DefenseSystem : MonoBehaviour
         if (enemyAnimator != null) enemyAnimator.SetTrigger("Attack"); 
         if (AudioManager.instance != null) AudioManager.instance.PlaySFX("Enemy_Attack");
 
-        // --- FIX: Jeda 1.2 detik menunggu suara pukulan mendarat ---
-        yield return new WaitForSeconds(1.2f); 
+        // Jeda sangat tipis khusus animasi 1 frame agar engine sempat berganti state
+        yield return new WaitForSeconds(0.02f); 
+
+        // Getaran kamera dan Hit Stop dieksekusi bersamaan dengan damage mendarat
+        if (battleController != null)
+        {
+            battleController.TriggerHitStop(0.15f); 
+            battleController.TriggerCameraShake(0.2f, 0.4f); 
+        }
 
         // 3. DAMAGE (Player kena damage, animasi Hurt, & suara Hurt keluar)
         battleController.PlayerTakeDamage(targetID);
 
-        // --- FIX: Jeda 0.8 detik untuk sisa animasi & suara sebelum mundur ---
-        yield return new WaitForSeconds(0.8f); 
+        // Menunggu sisa animasi musuh selesai sebelum mundur
+        yield return new WaitForSeconds(1.28f); 
+
+        // --- DINAMIKA KAMERA: Kembalikan kamera ke posisi semula saat musuh mundur ---
+        if (battleController != null)
+        {
+            battleController.StartCoroutine(battleController.CinematicActionPan(camAwal, 1f / 0.85f, 0.2f));
+        }
+        // Kunci posisi akhir secara absolut agar koordinatnya tidak meleset pasca getaran
+        mainCam.transform.localPosition = camAwal;
+        if (mainCam.orthographic) mainCam.orthographicSize = camSizeAwal; else mainCam.fieldOfView = camSizeAwal;
+        // ----------------------------------------------------------------------------
 
         // 4. MUNDUR
         float returnSpeed = 40f;
@@ -195,7 +232,6 @@ public class DefenseSystem : MonoBehaviour
 
         battleController.EndEnemyAttack();
     }
-
     void RandomizePerfectZone()
     {
         targetSliderValue = Random.Range(15f, 85f);
