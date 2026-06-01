@@ -15,4 +15,4 @@ MonoBehaviour:
   enemyName: Agus
   maxHealth: 80
   keysPerPhase: 030000000400000005000000050000000600000006000000
-  sliderSpeed: 4
+  sliderSpeed: 15

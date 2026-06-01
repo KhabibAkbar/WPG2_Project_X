@@ -5230,7 +5230,7 @@ MonoBehaviour:
   m_text: 'Phase : '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: cff4c2da37fe2bc439341ac0aea1d7af, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -10679,7 +10679,7 @@ MonoBehaviour:
 '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: bb578171cb712a541b615c543498a324, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -12103,9 +12103,9 @@ MonoBehaviour:
   enemyStartPoint: {fileID: 1399322365}
   defenseTimerSlider: {fileID: 88586807}
   timeLimit: 5
-  baseSpeed: 50
+  baseSpeed: 40
   speedIncrement: 15
-  defenseTolerance: 10
+  defenseTolerance: 5
 --- !u!1 &2140768014
 GameObject:
   m_ObjectHideFlags: 0
