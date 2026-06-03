@@ -31,7 +31,17 @@ public class DefenseSystem : MonoBehaviour
     public float speedIncrement = 15f;
 
     [Header("Defense Logic")]
-    public float defenseTolerance = 5f; 
+    [Tooltip("Ukuran awal kotak hijau saat turn pertama.")]
+    public float defenseTolerance = 10f; 
+    
+    [Header("Shrinking Hitbox Settings")]
+    [Tooltip("Berapa banyak area hijau menyusut setiap kali Player sukses bertahan.")]
+    public float toleranceShrink = 0.8f; 
+    
+    [Tooltip("Batas paling kecil area hijau agar game tidak mustahil dimainkan.")]
+    public float minTolerance = 5f; 
+    
+    private float currentTolerance; 
 
     private int defenseCount = 0;
     private float currentSpeed;
@@ -96,15 +106,55 @@ public class DefenseSystem : MonoBehaviour
         if (p1Animator != null) p1Animator.SetBool("IsDefending", false);
         if (p2Animator != null) p2Animator.SetBool("IsDefending", false);
 
-        if (Mathf.Abs(slider.value - targetSliderValue) <= defenseTolerance)
+        // ===================================================================
+        // --- BULLETPROOF VISUAL OVERLAP CHECK (WORLD SPACE) ---
+        // Menghitung akurasi berdasarkan posisi fisik piksel yang tampak di monitor.
+        // Menjamin jika PIN putih ada di dalam KOTAK HIJAU, 100% terhitung PERFECT.
+        // ===================================================================
+        bool isPerfect = false;
+
+        if (slider != null && slider.handleRect != null && perfectZone != null)
+        {
+            // 1. Ambil posisi fisik pin putih di layar
+            Vector3[] handleCorners = new Vector3[4];
+            slider.handleRect.GetWorldCorners(handleCorners);
+            float handleCenterX = (handleCorners[0].x + handleCorners[2].x) * 0.5f;
+
+            // 2. Ambil batas fisik kiri dan kanan kotak hijau di layar
+            Vector3[] zoneCorners = new Vector3[4];
+            perfectZone.GetWorldCorners(zoneCorners);
+            float zoneLeftX = zoneCorners[0].x;
+            float zoneRightX = zoneCorners[2].x;
+
+            // 3. Beri toleransi visual bonus 10% dari lebar kotak agar pencetan di ujung garis tetap lolos (anti-frustrasi)
+            float visualBuffer = (zoneRightX - zoneLeftX) * 0.1f; 
+
+            // Cek apakah pin putih berada di dalam rentang kotak hijau
+            if (handleCenterX >= (zoneLeftX - visualBuffer) && handleCenterX <= (zoneRightX + visualBuffer))
+            {
+                isPerfect = true;
+            }
+        }
+        else
+        {
+            // Fallback matematika cadangan jika ada komponen UI yang belum terpasang
+            float framePadding = currentSpeed * Time.deltaTime;
+            float actualTolerance = currentTolerance + framePadding;
+            if (Mathf.Abs(slider.value - targetSliderValue) <= actualTolerance)
+            {
+                isPerfect = true;
+            }
+        }
+        // ===================================================================
+
+        if (isPerfect)
         {
             if (battleController != null)
             {
-                // Posisinya ditaruh tepat di posisi Slider pertahanan
                 if (battleController.perfectSpawnPoint != null)
                     battleController.SpawnFloatingText("PERFECT!", Color.green, battleController.perfectSpawnPoint.position);
                 else
-                    battleController.SpawnFloatingText("PERFECT!", Color.green, slider.transform.position); // Fallback
+                    battleController.SpawnFloatingText("PERFECT!", Color.green, slider.transform.position);
             }
             battleController.PlayerSuccessDefense();
         }
@@ -166,17 +216,14 @@ public class DefenseSystem : MonoBehaviour
         float targetX = playerTr.position.x + playerWidth + enemyWidth + spacing;
         Vector3 attackPos = new Vector3(targetX, startPos.y, startPos.z);
 
-        // --- DINAMIKA KAMERA: Simpan keadaan awal kamera ---
         Camera mainCam = Camera.main;
         Vector3 camAwal = mainCam.transform.localPosition;
         float camSizeAwal = mainCam.orthographic ? mainCam.orthographicSize : mainCam.fieldOfView;
 
-        // Kamera ikut Zoom In ke arah koordinat serangan musuh (Durasi 0.2 detik)
         if (battleController != null)
         {
             battleController.StartCoroutine(battleController.CinematicActionPan(attackPos, 0.85f, 0.2f));
         }
-        // --------------------------------------------------
 
         // 1. MAJU
         float moveSpeed = 50f;
@@ -187,35 +234,30 @@ public class DefenseSystem : MonoBehaviour
         }
         enemyTr.position = attackPos;
 
-        // 2. HIT (Trigger Animasi Serang Musuh & Suara)
+        // 2. HIT
         if (enemyAnimator != null) enemyAnimator.SetTrigger("Attack"); 
         if (AudioManager.instance != null) AudioManager.instance.PlaySFX("Enemy_Attack");
 
-        // Jeda sangat tipis khusus animasi 1 frame agar engine sempat berganti state
         yield return new WaitForSeconds(0.02f); 
 
-        // Getaran kamera dan Hit Stop dieksekusi bersamaan dengan damage mendarat
         if (battleController != null)
         {
             battleController.TriggerHitStop(0.15f); 
             battleController.TriggerCameraShake(0.2f, 0.4f); 
         }
 
-        // 3. DAMAGE (Player kena damage, animasi Hurt, & suara Hurt keluar)
+        // 3. DAMAGE
         battleController.PlayerTakeDamage(targetID);
 
-        // Menunggu sisa animasi musuh selesai sebelum mundur
         yield return new WaitForSeconds(1.28f); 
 
-        // --- DINAMIKA KAMERA: Kembalikan kamera ke posisi semula saat musuh mundur ---
+        // KEMBALIKAN KAMERA
         if (battleController != null)
         {
             battleController.StartCoroutine(battleController.CinematicActionPan(camAwal, 1f / 0.85f, 0.2f));
         }
-        // Kunci posisi akhir secara absolut agar koordinatnya tidak meleset pasca getaran
         mainCam.transform.localPosition = camAwal;
         if (mainCam.orthographic) mainCam.orthographicSize = camSizeAwal; else mainCam.fieldOfView = camSizeAwal;
-        // ----------------------------------------------------------------------------
 
         // 4. MUNDUR
         float returnSpeed = 40f;
@@ -225,21 +267,25 @@ public class DefenseSystem : MonoBehaviour
             yield return null;
         }
 
-        // 5. LOCK POSISI & SELESAI
         enemyTr.position = startPos;
         isAttacking = false; 
         attackRoutine = null;
 
         battleController.EndEnemyAttack();
     }
+
     void RandomizePerfectZone()
     {
         targetSliderValue = Random.Range(15f, 85f);
         float percentage = targetSliderValue / 100f; 
 
+        float tolerancePercentage = currentTolerance / 100f;
+
         perfectZone.pivot = new Vector2(0.5f, 0.5f);
-        perfectZone.anchorMin = new Vector2(percentage, 0.5f);
-        perfectZone.anchorMax = new Vector2(percentage, 0.5f);
+        perfectZone.anchorMin = new Vector2(percentage - tolerancePercentage, 0f);
+        perfectZone.anchorMax = new Vector2(percentage + tolerancePercentage, 1f);
+        
+        perfectZone.sizeDelta = Vector2.zero; 
         perfectZone.anchoredPosition = Vector2.zero;
     }
 
@@ -263,6 +309,10 @@ public class DefenseSystem : MonoBehaviour
 
         defenseCount++;
         currentSpeed = baseSpeed + (defenseCount * speedIncrement);
+
+        currentTolerance = defenseTolerance - (defenseCount * toleranceShrink);
+        currentTolerance = Mathf.Max(currentTolerance, minTolerance);
+
         currentDefenseTimer = timeLimit;
 
         if (defenseTimerSlider != null)
@@ -278,26 +328,10 @@ public class DefenseSystem : MonoBehaviour
 
         RandomizePerfectZone();
 
-        Debug.Log("Fungsi ActivateDefense DIPANGGIL! Mencoba menyalakan animasi...");
-
         if (p1Animator != null && player1Obj != null && player1Obj.activeInHierarchy) 
-        {
             p1Animator.SetBool("IsDefending", true);
-            Debug.Log("Animasi IsDefending untuk P1 BERHASIL DITEMBAK!");
-        }
-        else
-        {
-            Debug.LogWarning("P1 Animator GAGAL ditembak. p1Animator Null atau objek mati!");
-        }
             
         if (p2Animator != null && player2Obj != null && player2Obj.activeInHierarchy) 
-        {
             p2Animator.SetBool("IsDefending", true);
-            Debug.Log("Animasi IsDefending untuk P2 BERHASIL DITEMBAK!");
-        }
-        else
-        {
-            Debug.LogWarning("P2 Animator GAGAL ditembak. p2Animator Null atau objek mati!");
-        }
     }
 }

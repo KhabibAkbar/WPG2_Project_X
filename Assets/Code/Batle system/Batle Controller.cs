@@ -172,29 +172,18 @@ public class BattleController : MonoBehaviour
             comboLength += 2; 
             successfulAttackCount = 0; 
 
-            if (comboNotificationText != null) 
-            {
-                comboNotificationText.text = "COMBO ATTACK!";
-                comboNotificationText.gameObject.SetActive(true);
-                StartCoroutine(HideComboNotification());
-            }
+            Vector3 spawnPos = perfectSpawnPoint != null ? perfectSpawnPoint.position : comboUI.transform.position;
+            SpawnFloatingText("COMBO ATTACK!", new Color(0f, 1f, 1f), spawnPos);
         }
         else
         {
             isComboTurn = false; 
-            if (comboNotificationText != null) comboNotificationText.gameObject.SetActive(false);
         }
 
         GenerateRandomCombo(comboLength);
         UpdateUI();
         comboUI.gameObject.SetActive(true);
         comboUI.SetupComboUI(currentRandomCombo);
-    }
-
-    IEnumerator HideComboNotification()
-    {
-        yield return new WaitForSeconds(1.55f);
-        if (comboNotificationText != null) comboNotificationText.gameObject.SetActive(false);
     }
 
     void HandleAttackInput()
@@ -224,9 +213,8 @@ public class BattleController : MonoBehaviour
                 if (playerYangLagiNgetik == 1 && p1Health <= 0) playerYangLagiNgetik = 2; 
                 else if (playerYangLagiNgetik == 2 && p2Health <= 0) playerYangLagiNgetik = 1; 
 
-                // --- FIX: Cek apakah ini pukulan terakhir (Sisa darah 10 atau kurang) ---
                 bool isFinisher = (enemyHealth <= 10);
-                EksekusiSeranganVisual(playerYangLagiNgetik, isFinisher); // Teruskan info Finisher
+                EksekusiSeranganVisual(playerYangLagiNgetik, isFinisher); 
 
                 enemyHealth -= 10;
 
@@ -245,7 +233,6 @@ public class BattleController : MonoBehaviour
 
                 if (enemyHealth <= 0) 
                 {
-                    // (Flash dipanggil di dalam Coroutine EfekMaju saat tinju mengenai sasaran)
                     DetermineWinner();
                     return;
                 }
@@ -286,7 +273,6 @@ public class BattleController : MonoBehaviour
 
         if (mainCam != null && enemyTr != null)
         {
-            // --- ZOOM IN KAMERA ---
             Vector3 originalPos = mainCam.transform.position;
             float originalSize = mainCam.orthographic ? mainCam.orthographicSize : mainCam.fieldOfView;
             float targetSize = originalSize * 0.6f; 
@@ -322,13 +308,8 @@ public class BattleController : MonoBehaviour
                 yield return null;
             }
 
-            // ==========================================
-            // KOREOGRAFI BARU: MENYUSUT -> GANTI -> MUNCUL -> PUMP
-            // ==========================================
-
             Vector3 originalScale = enemyTr.localScale;
             
-            // 1. Musuh Phase Lama Menyusut dan Hilang
             float shrinkDuration = 0.4f;
             float elapsedShrink = 0f;
             while (elapsedShrink < shrinkDuration)
@@ -337,12 +318,10 @@ public class BattleController : MonoBehaviour
                 enemyTr.localScale = Vector3.Lerp(originalScale, Vector3.zero, elapsedShrink / shrinkDuration);
                 yield return null;
             }
-            enemyTr.localScale = Vector3.zero; // Pastikan ukurannya 0
+            enemyTr.localScale = Vector3.zero; 
 
-            // Jeda dramatis saat arena kosong
             yield return new WaitForSeconds(0.2f);
 
-            // 2. Ganti Wujud (Animator & UI Portrait) saat musuh sedang ga kelihatan
             if (enemyAnimator != null)
             {
                 if (enemyCurrentStage == 2) 
@@ -357,7 +336,6 @@ public class BattleController : MonoBehaviour
                 }
             }
 
-            // 3. Musuh Phase Baru Muncul dan Membesar perlahan
             float growDuration = 0.4f;
             float elapsedGrow = 0f;
             while (elapsedGrow < growDuration)
@@ -368,14 +346,12 @@ public class BattleController : MonoBehaviour
             }
             enemyTr.localScale = originalScale;
 
-            // 4. Efek Detak Jantung / Pump (Sesuai aslinya)
             Vector3 enlargedScale = originalScale * 1.4f; 
             int pumpCount = 3; 
             float pumpSpeed = 0.15f; 
 
             for (int i = 0; i < pumpCount; i++)
             {
-                // SFX Pump keluar tiap kali dia memompa
                 if (AudioManager.instance != null && !string.IsNullOrEmpty(pumpSFX))
                 {
                     AudioManager.instance.PlaySFX(pumpSFX); 
@@ -401,7 +377,6 @@ public class BattleController : MonoBehaviour
 
             yield return new WaitForSeconds(0.5f); 
 
-            // --- ZOOM OUT KAMERA KEMBALI NORMAL ---
             elapsed = 0f;
             while (elapsed < duration)
             {
@@ -574,7 +549,6 @@ public class BattleController : MonoBehaviour
         sr.color = originalColor;
     }
 
-    // --- FIX: Menerima info isFinisher ---
     void EksekusiSeranganVisual(int noPlayer, bool isFinisher)
     {
        Transform targetTr = (noPlayer == 1) ? player1Obj.transform : player2Obj.transform;
@@ -583,7 +557,6 @@ public class BattleController : MonoBehaviour
        StartCoroutine(EfekMaju(targetTr, targetAnim, noPlayer, isFinisher));
     }
 
-    // --- FIX: Parameter isFinisher ditambahkan ---
     IEnumerator EfekMaju(Transform playerTr, Animator anim, int noPlayer, bool isFinisher)
     {
         Vector3 posAwal = playerTr.position;
@@ -595,17 +568,13 @@ public class BattleController : MonoBehaviour
         float spacing = 0.5f;
         Vector3 posSerang = new Vector3(enemyTr.position.x - (eWidth + pWidth + spacing), posAwal.y, posAwal.z);
 
-        // --- DINAMIKA KAMERA: Simpan posisi & ukuran awal kamera ---
         Camera mainCam = Camera.main;
         Vector3 camAwal = mainCam.transform.localPosition;
         float camSizeAwal = mainCam.orthographic ? mainCam.orthographicSize : mainCam.fieldOfView;
 
-        // Panggil Zoom In ke arah musuh bersamaan dengan player maju (Kecepatan 0.2 detik)
         StartCoroutine(CinematicActionPan(posSerang, 0.85f, 0.2f)); 
-        // -----------------------------------------------------------
 
         float moveSpeed = 50f;
-        // 1. Player maju ke depan musuh
         while (Vector3.Distance(playerTr.position, posSerang) > 0.1f)
         {
             playerTr.position = Vector3.MoveTowards(playerTr.position, posSerang, Time.deltaTime * moveSpeed);
@@ -613,12 +582,10 @@ public class BattleController : MonoBehaviour
         }
         playerTr.position = posSerang;
 
-        // 2. Mulai putar animasi Attack
         if (anim != null) anim.SetTrigger("Attack"); 
         
         yield return new WaitForSeconds(0.15f); 
 
-        // 3. SUNTIKAN JUICE & SUARA
         if (AudioManager.instance != null) 
             AudioManager.instance.PlaySFX(noPlayer == 1 ? "P1 Attack" : "Player 2_Attack");
 
@@ -629,14 +596,10 @@ public class BattleController : MonoBehaviour
 
         yield return new WaitForSeconds(0.25f);
 
-        // --- DINAMIKA KAMERA: Kembalikan kamera ke semula saat player mundur ---
         StartCoroutine(CinematicActionPan(camAwal, 1f / 0.85f, 0.2f));
-        // Kita juga pastikan posisi akhirnya terkunci rapi agar tidak meleset
         mainCam.transform.localPosition = camAwal;
         if (mainCam.orthographic) mainCam.orthographicSize = camSizeAwal; else mainCam.fieldOfView = camSizeAwal;
-        // -----------------------------------------------------------------------
 
-        // 5. Mundur ke tempat semula
         while (Vector3.Distance(playerTr.position, posAwal) > 0.1f)
         {
             playerTr.position = Vector3.MoveTowards(playerTr.position, posAwal, Time.deltaTime * 40f);
@@ -655,41 +618,31 @@ public class BattleController : MonoBehaviour
 
     IEnumerator WinSequence()
     {
-        // 1. Tunggu sebentar sampai tinju Player benar-benar mendarat
-        // Waktu 0.2f ini sengaja disinkronkan agar pas dengan layar Flash & Hit Stop
         yield return new WaitForSeconds(0.2f);
 
-        // 2. Efek Musuh Hancur / Mati (Menyusut dengan cepat)
         if (defenseSystem != null && defenseSystem.enemyObj != null)
         {
             Transform enemyTr = defenseSystem.enemyObj.transform;
-            
-            float duration = 0.4f; // Kecepatan musuh lenyap (0.4 detik)
+            float duration = 0.4f; 
             float elapsed = 0f;
             Vector3 startScale = enemyTr.localScale;
             
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                // Animasi mengecil menjadi hilang (Vector3.zero)
                 enemyTr.localScale = Vector3.Lerp(startScale, Vector3.zero, elapsed / duration);
                 yield return null;
             }
-            
-            // Matikan objek musuh dari arena
             defenseSystem.enemyObj.SetActive(false);
         }
 
-        // 3. Jeda dramatis (layar sepi sesaat setelah musuh hancur)
         yield return new WaitForSeconds(0.5f);
 
-        // 4. Baru Tampilkan UI "You Win"
         if (winPanel != null) winPanel.SetActive(true);
         if (AudioManager.instance != null) AudioManager.instance.PlaySFX("WinSound");
         
         yield return new WaitForSeconds(2f);
         
-        // 5. Pindah Scene
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
         if (nextSceneIndex < SceneManager.sceneCountInBuildSettings) SceneManager.LoadScene(nextSceneIndex);
     }
@@ -705,22 +658,36 @@ public class BattleController : MonoBehaviour
     IEnumerator LoseSequence()
     {
         if (losePanel != null) losePanel.SetActive(true);
-        yield return new WaitForSeconds(2f);
+        
+        // --- FIX: Ubah ke Realtime agar tidak membeku saat Hit Stop ---
+        yield return new WaitForSecondsRealtime(2f);
+        
         if (losePanel != null) losePanel.SetActive(false);
-        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        
+        if (GameManager.instance != null)
+        {
+            GameManager.instance.GameOver();
+        }
+        else if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true); 
+        }
     }
 
     void CheckPlayerLives()
     {
-        // Jika darah habis dan objeknya masih aktif, jalankan animasi menyusut
         if (p1Health <= 0 && player1Obj != null && player1Obj.activeInHierarchy) 
             StartCoroutine(PlayerDeathRoutine(player1Obj));
             
         if (p2Health <= 0 && player2Obj != null && player2Obj.activeInHierarchy) 
             StartCoroutine(PlayerDeathRoutine(player2Obj));
+
+        if (p1Health <= 0 && p2Health <= 0)
+        {
+            DetermineLoser();
+        }
     }
 
-    // --- COROUTINE BARU UNTUK KEMATIAN PLAYER ---
     IEnumerator PlayerDeathRoutine(GameObject playerObj)
     {
         float duration = 0.4f;
@@ -735,7 +702,6 @@ public class BattleController : MonoBehaviour
         }
         
         playerObj.SetActive(false);
-        // Kembalikan skala ke normal (untuk persiapan jika player tekan Retry / main lagi)
         playerObj.transform.localScale = startScale; 
     }
 
@@ -793,7 +759,6 @@ public class BattleController : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-
     public void TriggerHitStop(float duration)
     {
         StartCoroutine(HitStopRoutine(duration));
@@ -825,14 +790,13 @@ public class BattleController : MonoBehaviour
             float y = originalPos.y + Random.Range(-1f, 1f) * magnitude;
 
             mainCam.transform.localPosition = new Vector3(x, y, originalPos.z);
-            
-            // UnscaledDeltaTime agar tetap bergetar saat Time.timeScale = 0
             elapsed += Time.unscaledDeltaTime; 
             yield return null;
         }
 
         mainCam.transform.localPosition = originalPos;
     }
+
     public void TriggerScreenFlash()
     {
         if (flashScreenImage != null)
@@ -841,25 +805,17 @@ public class BattleController : MonoBehaviour
 
     private IEnumerator ScreenFlashRoutine()
     {
-        // Set warna putih dengan Alpha 80% secara instan
         flashScreenImage.color = new Color(1f, 1f, 1f, 0.8f);
-
-        float duration = 0.15f; // Sangat cepat
+        float duration = 0.15f; 
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
-            // Gunakan unscaledDeltaTime agar efek flash tetap jalan meskipun game sedang beku (Hit Stop)
             elapsed += Time.unscaledDeltaTime;
-            
-            // Pudarkan Alpha dari 0.8 kembali ke 0
             float alpha = Mathf.Lerp(0.8f, 0f, elapsed / duration);
             flashScreenImage.color = new Color(1f, 1f, 1f, alpha);
-            
             yield return null;
         }
-
-        // Pastikan benar-benar transparan di akhir
         flashScreenImage.color = new Color(1f, 1f, 1f, 0f);
     }
 
@@ -867,13 +823,9 @@ public class BattleController : MonoBehaviour
     {
         if (floatingTextPrefab != null && canvasTransform != null)
         {
-            // Munculkan prefab di dalam Canvas
             GameObject popText = Instantiate(floatingTextPrefab, canvasTransform);
-            
-            // Atur posisinya (misal: di atas tombol QTE atau di atas Slider)
             popText.transform.position = spawnPosition; 
 
-            // Panggil fungsi setup untuk mengatur tulisan dan animasinya
             FloatingText ft = popText.GetComponent<FloatingText>();
             if (ft != null)
             {
@@ -882,6 +834,7 @@ public class BattleController : MonoBehaviour
         }
     }
 
+    // --- DI SINI FUNGSI UTAMA CINEMATIC ACTION PAN ---
     public IEnumerator CinematicActionPan(Vector3 targetPos, float zoomMultiplier, float duration)
     {
         Camera mainCam = Camera.main;
@@ -889,47 +842,35 @@ public class BattleController : MonoBehaviour
 
         Vector3 startPos = mainCam.transform.localPosition;
         float startSize = mainCam.orthographic ? mainCam.orthographicSize : mainCam.fieldOfView;
-        
         float targetSize = startSize * zoomMultiplier;
 
-        // --- FIX: LOGIKA MAP BOUNDS UNTUK CINEMATIC PAN ---
         float targetX = targetPos.x;
         float targetY = targetPos.y;
 
-        // Jika mapBounds dipasang dan kamera bertipe 2D (Orthographic)
         if (mapBounds != null && mainCam.orthographic)
         {
-            // Hitung lebar dan tinggi jangkauan kamera berdasarkan target size zoom yang baru
             float camHeight = targetSize;
             float camWidth = targetSize * mainCam.aspect;
-            
-            // Batas minimal dan maksimal posisi kamera agar tidak keluar batas Collider2D mapBounds
             float minX = mapBounds.bounds.min.x + camWidth;
             float maxX = mapBounds.bounds.max.x - camWidth;
             float minY = mapBounds.bounds.min.y + camHeight;
             float maxY = mapBounds.bounds.max.y - camHeight;
 
-            // Kunci posisi X agar tetap di dalam batas map
             if (minX < maxX) targetX = Mathf.Clamp(targetX, minX, maxX);
             else targetX = (minX + maxX) / 2f;
 
-            // Kunci posisi Y agar tetap di dalam batas map
             if (minY < maxY) targetY = Mathf.Clamp(targetY, minY, maxY);
             else targetY = (minY + maxY) / 2f;
         }
 
-        // Terapkan koordinat akhir yang sudah aman dimasukkan ke batas map
         Vector3 finalTargetPos = new Vector3(targetX, targetY, startPos.z);
-        // --------------------------------------------------
-
         float elapsed = 0f;
+
         while (elapsed < duration)
         {
             elapsed += Time.unscaledDeltaTime; 
             float t = elapsed / duration;
-
-            // Efek Ease-Out agar gerakannya mulus
-            t = 1f - Mathf.Pow(1f - t, 3f); 
+            t = 1f - Mathf.Pow(1f - t, 3f); // Ease-Out
 
             mainCam.transform.localPosition = Vector3.Lerp(startPos, finalTargetPos, t);
             

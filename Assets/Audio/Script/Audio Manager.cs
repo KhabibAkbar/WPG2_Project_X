@@ -5,6 +5,14 @@ using System.Collections;
 
 public class AudioManager : MonoBehaviour
 {
+    // --- PERBAIKAN: Memasukkan SoundSetting ke DALAM AudioManager ---
+    [System.Serializable]
+    public class SoundSetting
+    {
+        public AudioClip clip;
+        [Range(0f, 1f)] public float volumeModifier = 1f;
+    }
+
     public static AudioManager instance;
 
     [Header("Audio Sources")]
@@ -13,19 +21,24 @@ public class AudioManager : MonoBehaviour
     public AudioSource sfxLoopSource;
 
     [Header("BGM Clips")]
-    public AudioClip mainmenu;
-    public AudioClip cutscene;
-    public AudioClip gameplayBGM;
-    public AudioClip FightingBGM;
+    public SoundSetting mainmenu;
+    public SoundSetting cutscene;
+    public SoundSetting gameplayBGM;
+    public SoundSetting FightingBGM;
 
     [Header("SFX Clips")]
-    public List<AudioClip> sfxClips;
+    public List<SoundSetting> sfxClips;
 
-    private Dictionary<string, AudioClip> bgmDict;
-    private Dictionary<string, AudioClip> sfxDict;
+    private Dictionary<string, SoundSetting> bgmDict;
+    private Dictionary<string, SoundSetting> sfxDict;
 
-    [HideInInspector] // Agar tidak membingungkan di Inspector
+    [HideInInspector] 
     public bool blockAllSFX = true;
+
+    private float currentBgmModifier = 1f;
+    private float currentSfxLoopModifier = 1f;
+
+    private Coroutine bgmFadeRoutine;
 
     private void Awake()
     {
@@ -38,16 +51,7 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        // Load Volume
-        float savedBGM = PlayerPrefs.GetFloat("BGMVolume", 50f); // Default 50 jika baru main
-        float savedSFX = PlayerPrefs.GetFloat("SFXVolume", 50f);
-
-        bgmSource.volume = savedBGM / 100f;
-        sfxSource.volume = savedSFX / 100f;
-        if (sfxLoopSource != null) sfxLoopSource.volume = savedSFX / 100f;
-
-        // Inisialisasi Dictionary
-        bgmDict = new Dictionary<string, AudioClip>
+        bgmDict = new Dictionary<string, SoundSetting>
         {
             { "Main Menu", mainmenu },
             { "Cutscene", cutscene },
@@ -55,17 +59,23 @@ public class AudioManager : MonoBehaviour
             { "Fighting", FightingBGM },
         };
 
-        sfxDict = new Dictionary<string, AudioClip>();
-        foreach (var clip in sfxClips)
+        sfxDict = new Dictionary<string, SoundSetting>();
+        foreach (var sound in sfxClips)
         {
-            if (clip != null && !sfxDict.ContainsKey(clip.name))
-                sfxDict.Add(clip.name, clip);
+            if (sound.clip != null && !sfxDict.ContainsKey(sound.clip.name))
+                sfxDict.Add(sound.clip.name, sound);
         }
+
+        float savedBGM = PlayerPrefs.GetFloat("BGMVolume", 50f); 
+        float savedSFX = PlayerPrefs.GetFloat("SFXVolume", 50f);
+
+        bgmSource.volume = (savedBGM / 100f);
+        sfxSource.volume = (savedSFX / 100f);
+        if (sfxLoopSource != null) sfxLoopSource.volume = (savedSFX / 100f);
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 1. Blokir suara saat pindah scene agar tidak ada suara sisa/sampah
         blockAllSFX = true;
 
         if (sfxSource != null) sfxSource.Stop();
@@ -75,10 +85,8 @@ public class AudioManager : MonoBehaviour
             sfxLoopSource.clip = null;
         }
 
-        // 2. Jalankan Coroutine untuk membuka blokir secara otomatis
         StartCoroutine(AutoUnlockRoutine());
 
-        // Switch BGM
         switch (scene.name)
         {
             case "Main Menu": PlayBGM("Main Menu"); break;
@@ -91,74 +99,98 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // --- BAGIAN BARU: Pembuka Blokir Otomatis ---
     IEnumerator AutoUnlockRoutine()
     {
-        // Tunggu sebentar (0.2 detik) untuk memastikan transisi scene selesai
-        // dan suara sampah sudah hilang.
         yield return new WaitForSeconds(0.2f);
         blockAllSFX = false;
-        Debug.Log("<color=cyan>SFX Block Released.</color>");
     }
 
     public void PlayBGM(string name, bool loop = true)
     {
-        if (!bgmDict.TryGetValue(name, out var clip) || clip == null) return;
-        if (bgmSource.clip == clip && bgmSource.isPlaying) return;
+        if (!bgmDict.TryGetValue(name, out var sound) || sound.clip == null) return;
+        if (bgmSource.clip == sound.clip && bgmSource.isPlaying) return;
 
-        bgmSource.Stop();
-        bgmSource.clip = clip;
         bgmSource.loop = loop;
+
+        if (bgmFadeRoutine != null) StopCoroutine(bgmFadeRoutine);
+        bgmFadeRoutine = StartCoroutine(FadeBGM(sound, 1.0f));
+    }
+
+    private IEnumerator FadeBGM(SoundSetting newSound, float transitionTime)
+    {
+        if (bgmSource.isPlaying)
+        {
+            float startVolume = bgmSource.volume;
+            for (float t = 0; t < transitionTime; t += Time.deltaTime)
+            {
+                bgmSource.volume = Mathf.Lerp(startVolume, 0, t / transitionTime);
+                yield return null;
+            }
+            bgmSource.volume = 0f;
+            bgmSource.Stop();
+        }
+
+        bgmSource.clip = newSound.clip;
+        currentBgmModifier = newSound.volumeModifier;
         bgmSource.Play();
+
+        float savedBGM = PlayerPrefs.GetFloat("BGMVolume", 50f);
+        float targetVolume = (savedBGM / 100f) * currentBgmModifier;
+
+        for (float t = 0; t < transitionTime; t += Time.deltaTime)
+        {
+            bgmSource.volume = Mathf.Lerp(0, targetVolume, t / transitionTime);
+            yield return null;
+        }
+        
+        bgmSource.volume = targetVolume; 
     }
 
     public void PlaySFX(string name)
     {
-        if (blockAllSFX) return; // Menghalangi suara sampah saat loading
-        if (!sfxDict.TryGetValue(name, out var clip)) return;
+        if (blockAllSFX) return; 
+        if (!sfxDict.TryGetValue(name, out var sound)) return;
         if (sfxSource.volume <= 0f) return;
 
-        sfxSource.PlayOneShot(clip);
+        sfxSource.PlayOneShot(sound.clip, sound.volumeModifier);
     }
 
-    // --- BARU: FUNGSI UNTUK MEMAINKAN SUARA DENGAN PITCH/KECEPATAN CUSTOM ---
     public void PlaySFXPitched(string name, float customPitch)
     {
         if (blockAllSFX) return; 
-        if (!sfxDict.TryGetValue(name, out var clip)) return;
+        if (!sfxDict.TryGetValue(name, out var sound)) return;
         if (sfxSource.volume <= 0f) return;
 
-        // Buat 'speaker' sementara khusus untuk suara lambat/cepat
-        // Agar tidak merusak kecepatan SFX pukulan/klik yang lain
         GameObject tempAudioObj = new GameObject("TempPitchedSFX_" + name);
         AudioSource tempSource = tempAudioObj.AddComponent<AudioSource>();
-        
-        tempSource.clip = clip;
-        tempSource.volume = sfxSource.volume;
+
+        tempSource.clip = sound.clip;
+        tempSource.volume = sfxSource.volume * sound.volumeModifier; 
         tempSource.pitch = customPitch;
         tempSource.Play();
 
-        // Hancurkan speaker siluman ini tepat saat suaranya selesai
-        Destroy(tempAudioObj, clip.length / customPitch);
+        Destroy(tempAudioObj, sound.clip.length / customPitch);
     }
 
-    // Gunakan ini untuk suara yang HARUS bunyi saat Start Scene (seperti Platform1)
     public void PlaySFXDirect(string name)
     {
-        if (!sfxDict.TryGetValue(name, out var clip)) return;
+        if (!sfxDict.TryGetValue(name, out var sound)) return;
         if (sfxSource.volume <= 0f) return;
 
-        sfxSource.PlayOneShot(clip);
-        Debug.Log("<color=green>Direct SFX Played: </color>" + name);
+        sfxSource.PlayOneShot(sound.clip, sound.volumeModifier);
     }
 
     public void PlayLoopingSFX(string name)
     {
         if (blockAllSFX) return;
-        if (!sfxDict.TryGetValue(name, out var clip)) return;
+        if (!sfxDict.TryGetValue(name, out var sound)) return;
         if (sfxLoopSource == null || sfxLoopSource.volume <= 0f) return;
 
-        if (sfxLoopSource.clip != clip) sfxLoopSource.clip = clip;
+        currentSfxLoopModifier = sound.volumeModifier;
+        float savedSFX = PlayerPrefs.GetFloat("SFXVolume", 50f);
+        sfxLoopSource.volume = (savedSFX / 100f) * currentSfxLoopModifier;
+
+        if (sfxLoopSource.clip != sound.clip) sfxLoopSource.clip = sound.clip;
         if (!sfxLoopSource.isPlaying) sfxLoopSource.Play();
     }
 
@@ -169,16 +201,16 @@ public class AudioManager : MonoBehaviour
 
     public void SetBGMVolume(float value)
     {
-        bgmSource.volume = value / 100f;
         PlayerPrefs.SetFloat("BGMVolume", value);
+        bgmSource.volume = (value / 100f) * currentBgmModifier;
     }
 
     public void SetSFXVolume(float value)
     {
+        PlayerPrefs.SetFloat("SFXVolume", value);
         float vol = value / 100f;
         sfxSource.volume = vol;
-        if (sfxLoopSource != null) sfxLoopSource.volume = vol;
-        PlayerPrefs.SetFloat("SFXVolume", value);
+        if (sfxLoopSource != null) sfxLoopSource.volume = vol * currentSfxLoopModifier;
     }
 
     private void OnDestroy()
@@ -186,7 +218,6 @@ public class AudioManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    // Fungsi manual jika dibutuhkan oleh script lain
     public void AllowSFX()
     {
         blockAllSFX = false;
@@ -194,45 +225,29 @@ public class AudioManager : MonoBehaviour
 
     public void PlayLoopingSFXDirect(string name)
     {
-        // 1. Pastikan Dictionary terisi
-        if (sfxDict == null || sfxDict.Count == 0)
-        {
-            sfxDict = new Dictionary<string, AudioClip>();
-            foreach (var clip in sfxClips)
-            {
-                if (clip != null && !sfxDict.ContainsKey(clip.name))
-                    sfxDict.Add(clip.name, clip);
-            }
-        }
+        if (sfxDict == null || sfxDict.Count == 0) return; 
 
-        // 2. Cari clip tanpa peduli huruf besar/kecil (Menghindari error p kecil vs P besar)
-        AudioClip foundClip = null;
+        SoundSetting foundSound = null;
         foreach (var kvp in sfxDict)
         {
             if (string.Equals(kvp.Key, name, System.StringComparison.OrdinalIgnoreCase))
             {
-                foundClip = kvp.Value;
+                foundSound = kvp.Value;
                 break;
             }
         }
 
-        // 3. Eksekusi jika ditemukan
-        if (foundClip != null)
+        if (foundSound != null)
         {
             if (sfxLoopSource == null) return;
 
+            currentSfxLoopModifier = foundSound.volumeModifier;
             float savedSFX = PlayerPrefs.GetFloat("SFXVolume", 50f);
-            sfxLoopSource.volume = savedSFX / 100f;
+            sfxLoopSource.volume = (savedSFX / 100f) * currentSfxLoopModifier;
 
-            sfxLoopSource.clip = foundClip;
+            sfxLoopSource.clip = foundSound.clip;
             sfxLoopSource.loop = true;
             sfxLoopSource.Play();
-
-            Debug.Log("<color=yellow>Looping SFX Berhasil: </color>" + foundClip.name);
-        }
-        else
-        {
-            Debug.LogWarning("AudioManager: Nama '" + name + "' tidak ditemukan di list SFX Clips!");
         }
     }
 }

@@ -5043,6 +5043,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1366024751}
+  - {fileID: 1961298817}
   - {fileID: 26681934}
   m_Father: {fileID: 2139171149}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -6841,15 +6842,14 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1961298817}
+  m_Children: []
   m_Father: {fileID: 965411443}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1.97097, y: 0.0000051259995}
-  m_SizeDelta: {x: 21.05806, y: 20}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 20}
+  m_Pivot: {x: 0, y: 0}
 --- !u!114 &1366024752
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10237,7 +10237,7 @@ MonoBehaviour:
   stage3Portrait: {fileID: -8114436595719119088, guid: 8ac8ca12cd9a4364ea346cc1f32e07bb, type: 3}
   winPanel: {fileID: 1781125463}
   losePanel: {fileID: 1538383835}
-  gameOverPanel: {fileID: 1542578821}
+  gameOverPanel: {fileID: 202691538}
   enemyHealthSlider: {fileID: 1305738371}
   p1Hearts:
   - {fileID: 1300794265}
@@ -10642,16 +10642,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1961298816}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.16059728, y: 0.16059728, z: 0.16059728}
+  m_LocalScale: {x: 0.1605973, y: 0.1605973, z: 0.1605973}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1366024751}
+  m_Father: {fileID: 965411443}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 6, y: 0}
+  m_AnchoredPosition: {x: -29.2, y: 17}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1961298818
@@ -10674,9 +10674,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Space
-
-'
+  m_text: PRESS  SPACE ON GREEN !!!
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: bb578171cb712a541b615c543498a324, type: 2}
@@ -10685,8 +10683,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278714623
-  m_fontColor: {r: 1, g: 0, b: 0.030305386, a: 1}
+    rgba: 4278248191
+  m_fontColor: {r: 1, g: 0.8862745, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -10703,8 +10701,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 44
-  m_fontSizeBase: 44
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -10742,7 +10740,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 60.107014, w: 0}
+  m_margin: {x: 0, y: 0, z: -375.39996, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -12104,8 +12102,10 @@ MonoBehaviour:
   defenseTimerSlider: {fileID: 88586807}
   timeLimit: 5
   baseSpeed: 40
-  speedIncrement: 15
-  defenseTolerance: 5
+  speedIncrement: 4
+  defenseTolerance: 10
+  toleranceShrink: 0.8
+  minTolerance: 5
 --- !u!1 &2140768014
 GameObject:
   m_ObjectHideFlags: 0
