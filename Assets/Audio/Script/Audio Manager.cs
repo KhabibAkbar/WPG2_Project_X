@@ -5,7 +5,6 @@ using System.Collections;
 
 public class AudioManager : MonoBehaviour
 {
-    // --- PERBAIKAN: Memasukkan SoundSetting ke DALAM AudioManager ---
     [System.Serializable]
     public class SoundSetting
     {
@@ -16,7 +15,7 @@ public class AudioManager : MonoBehaviour
     public static AudioManager instance;
 
     [Header("Audio Sources")]
-    public AudioSource bgmSource;
+    public AudioSource bgmSource; // Speaker BGM Utama
     public AudioSource sfxSource;
     public AudioSource sfxLoopSource;
 
@@ -40,6 +39,10 @@ public class AudioManager : MonoBehaviour
 
     private Coroutine bgmFadeRoutine;
 
+    // --- VARIABEL BARU: Untuk Crossfade ---
+    private AudioSource activeBgmSource; 
+    private AudioSource nextBgmSource;   
+
     private void Awake()
     {
         if (instance != null)
@@ -51,6 +54,7 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
 
+        // Setup Dictionary
         bgmDict = new Dictionary<string, SoundSetting>
         {
             { "Main Menu", mainmenu },
@@ -66,10 +70,19 @@ public class AudioManager : MonoBehaviour
                 sfxDict.Add(sound.clip.name, sound);
         }
 
+        // --- SISTEM SPEAKER GANDA UNTUK CROSSFADE ---
+        activeBgmSource = bgmSource;
+        
+        // Memunculkan speaker cadangan (nextBgmSource) secara otomatis di belakang layar
+        nextBgmSource = gameObject.AddComponent<AudioSource>();
+        nextBgmSource.playOnAwake = false;
+        nextBgmSource.loop = true;
+
+        // Load Volume
         float savedBGM = PlayerPrefs.GetFloat("BGMVolume", 50f); 
         float savedSFX = PlayerPrefs.GetFloat("SFXVolume", 50f);
 
-        bgmSource.volume = (savedBGM / 100f);
+        activeBgmSource.volume = (savedBGM / 100f);
         sfxSource.volume = (savedSFX / 100f);
         if (sfxLoopSource != null) sfxLoopSource.volume = (savedSFX / 100f);
     }
@@ -108,42 +121,52 @@ public class AudioManager : MonoBehaviour
     public void PlayBGM(string name, bool loop = true)
     {
         if (!bgmDict.TryGetValue(name, out var sound) || sound.clip == null) return;
-        if (bgmSource.clip == sound.clip && bgmSource.isPlaying) return;
-
-        bgmSource.loop = loop;
+        
+        // Cek jika lagu yang diminta sudah sedang menyala, abaikan agar tidak mengulang dari awal
+        if (activeBgmSource.clip == sound.clip && activeBgmSource.isPlaying) return;
 
         if (bgmFadeRoutine != null) StopCoroutine(bgmFadeRoutine);
-        bgmFadeRoutine = StartCoroutine(FadeBGM(sound, 1.0f));
+        
+        // Waktu Crossfade disetel ke 1.5 detik (Bisa kamu ubah sesuka hati)
+        bgmFadeRoutine = StartCoroutine(CrossFadeBGM(sound, 1.5f));
     }
 
-    private IEnumerator FadeBGM(SoundSetting newSound, float transitionTime)
+    // --- LOGIKA CROSSFADE BGM (MENYILANG) ---
+    private IEnumerator CrossFadeBGM(SoundSetting newSound, float transitionTime)
     {
-        if (bgmSource.isPlaying)
-        {
-            float startVolume = bgmSource.volume;
-            for (float t = 0; t < transitionTime; t += Time.deltaTime)
-            {
-                bgmSource.volume = Mathf.Lerp(startVolume, 0, t / transitionTime);
-                yield return null;
-            }
-            bgmSource.volume = 0f;
-            bgmSource.Stop();
-        }
-
-        bgmSource.clip = newSound.clip;
+        // 1. Siapkan lagu baru di speaker cadangan (nextBgmSource)
+        nextBgmSource.clip = newSound.clip;
         currentBgmModifier = newSound.volumeModifier;
-        bgmSource.Play();
+        nextBgmSource.volume = 0f;
+        nextBgmSource.Play();
 
         float savedBGM = PlayerPrefs.GetFloat("BGMVolume", 50f);
         float targetVolume = (savedBGM / 100f) * currentBgmModifier;
+        float startVolume = activeBgmSource.volume;
 
+        // 2. Turunkan volume lagu lama BERSAMAAN dengan menaikkan volume lagu baru
         for (float t = 0; t < transitionTime; t += Time.deltaTime)
         {
-            bgmSource.volume = Mathf.Lerp(0, targetVolume, t / transitionTime);
+            float progress = t / transitionTime;
+            
+            // Lagu lama perlahan mengecil
+            activeBgmSource.volume = Mathf.Lerp(startVolume, 0f, progress);
+            
+            // Lagu baru perlahan membesar
+            nextBgmSource.volume = Mathf.Lerp(0f, targetVolume, progress);
+            
             yield return null;
         }
-        
-        bgmSource.volume = targetVolume; 
+
+        // 3. Pastikan volume mencapai target di akhir
+        activeBgmSource.volume = 0f;
+        activeBgmSource.Stop();
+        nextBgmSource.volume = targetVolume;
+
+        // 4. Tukar peran speaker (Cadangan menjadi Utama)
+        AudioSource temp = activeBgmSource;
+        activeBgmSource = nextBgmSource;
+        nextBgmSource = temp;
     }
 
     public void PlaySFX(string name)
@@ -202,7 +225,9 @@ public class AudioManager : MonoBehaviour
     public void SetBGMVolume(float value)
     {
         PlayerPrefs.SetFloat("BGMVolume", value);
-        bgmSource.volume = (value / 100f) * currentBgmModifier;
+        // Pastikan mengatur volume pada speaker yang sedang aktif bernyanyi
+        if (activeBgmSource != null) 
+            activeBgmSource.volume = (value / 100f) * currentBgmModifier;
     }
 
     public void SetSFXVolume(float value)

@@ -12,10 +12,12 @@ public class ResolutionSetting : MonoBehaviour
     List<string> options = new List<string>();
     int selectedResolutionIndex;
 
-    void Start()
+    // Diubah dari Start() ke OnEnable() agar selalu refresh tiap kali panel dibuka
+    void OnEnable()
     {
         resolutions = Screen.resolutions;
         resolutionDropdown.ClearOptions();
+        options.Clear(); // [BARU] Bersihkan list agar tidak menumpuk kalau dibuka tutup
 
         int currentResolutionIndex = 0;
 
@@ -35,12 +37,16 @@ public class ResolutionSetting : MonoBehaviour
         selectedResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", currentResolutionIndex);
         bool isfullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
 
-        resolutionDropdown.value = currentResolutionIndex;
+        resolutionDropdown.value = selectedResolutionIndex; // [DIPERBARUI] Pakai data simpanan
         resolutionDropdown.RefreshShownValue();
-
-        fullscreenToggle.isOn = isfullscreen;
+        
+        if (fullscreenToggle != null) fullscreenToggle.isOn = isfullscreen;
 
         applyresolutions();
+        
+        // Listener dinamis agar lebih aman
+        resolutionDropdown.onValueChanged.RemoveAllListeners();
+        resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
     }
 
     public void OnResolutionChanged(int index)

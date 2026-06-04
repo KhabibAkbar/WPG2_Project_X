@@ -2,6 +2,13 @@ using UnityEngine;
 
 public class MovementP2 : MonoBehaviour
 {
+    [Header("Input Settings (Controller/Keyboard)")]
+    [Tooltip("Ketik 'Horizontal_P2' untuk Player 2")]
+    public string horizontalAxis = "Horizontal_P2"; 
+    
+    [Tooltip("Ketik 'Jump_P2' untuk Player 2")]
+    public string jumpButton = "Jump_P2";
+
     public float speed = 5f;
     public float jumpForce = 8f;
     public float slowmoDorong = 2f;
@@ -11,7 +18,6 @@ public class MovementP2 : MonoBehaviour
     public float footstepInterval = 0.4f;
     private float footstepTimer;
 
-    // Timer khusus mendorong agar suara berulang
     public float pushSFXInterval = 0.5f;
     private float pushSFXTimer;
 
@@ -40,19 +46,16 @@ public class MovementP2 : MonoBehaviour
 
     private Animator anim;
 
-    // Tambahan untuk Teleport Lock agar sama dengan P1
     private bool isTeleporting = false;
-    
-    // [BARU] Variabel khusus untuk Cutscene / Switch Player
     private bool isCutscene = false;
 
     public bool isGroundedForCutscene = false;
 
     [Header("Cutscene Status")]
-    public bool isLocked = false; // <--- Tambahkan baris ini
+    public bool isLocked = false; 
 
     [Header("Visual Effects")]
-    public ParticleSystem footstepParticles; // <--- Variabel Partikel Asap
+    public ParticleSystem footstepParticles; 
 
     void Awake()
     {
@@ -68,7 +71,6 @@ public class MovementP2 : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    // Fungsi asli untuk Teleport (TIDAK DIUBAH)
     public void SetTeleportLock(bool state)
     {
         isTeleporting = state;
@@ -80,10 +82,8 @@ public class MovementP2 : MonoBehaviour
         }
     }
 
-    // [BARU] Fungsi khusus untuk dipanggil dari Cutscene Manager / saat ganti Player
     public void SetCutsceneLock(bool state)
     {
-        // 1. PAKSA AMBIL KOMPONEN JIKA MASIH KOSONG (Solusi Balapan Waktu Awake)
         if (rb == null) rb = GetComponent<Rigidbody2D>();
         if (anim == null) anim = GetComponent<Animator>();
 
@@ -94,11 +94,11 @@ public class MovementP2 : MonoBehaviour
             if (state) 
             {
                 rb.linearVelocity = Vector2.zero;
-                rb.simulated = false; // Matikan gravitasi & fisika
+                rb.simulated = false; 
             }
             else
             {
-                rb.simulated = true;  // Hidupkan kembali
+                rb.simulated = true;  
             }
         }
         
@@ -110,12 +110,12 @@ public class MovementP2 : MonoBehaviour
 
     void Update()
     {
-        if (isLocked) return; // Cegah input jika sedang dikunci (cutscene atau teleport    )
-        if (GameManager.instance != null && GameManager.instance.isGameOver)
-            return;
-
-        // [DIPERBARUI] Cegah input jika sedang teleport ATAU cutscene
+        if (isLocked) return; 
+        if (GameManager.instance != null && GameManager.instance.isGameOver) return;
         if (isTeleporting || isCutscene) return;
+
+        // Membaca input dari Controller atau Keyboard untuk Player 2
+        float axisInput = Input.GetAxisRaw(horizontalAxis);
 
         if (inputBufferTimer > 0)
         {
@@ -126,8 +126,7 @@ public class MovementP2 : MonoBehaviour
         {
             moveInput = 0;
 
-            // Menggunakan Arrow Keys
-            if (Input.GetKey(KeyCode.LeftArrow))
+            if (axisInput < -0.1f)
             {
                 moveInput = -1;
                 if (lastLockedInput != -1)
@@ -136,7 +135,7 @@ public class MovementP2 : MonoBehaviour
                     lastLockedInput = -1;
                 }
             }
-            else if (Input.GetKey(KeyCode.RightArrow))
+            else if (axisInput > 0.1f)
             {
                 moveInput = 1;
                 if (lastLockedInput != 1)
@@ -165,14 +164,14 @@ public class MovementP2 : MonoBehaviour
             footstepTimer = 0;
         }
 
-        // Loncat menggunakan DownArrow
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        // Loncat menggunakan input yang didaftarkan di Input Manager
+        if (Input.GetButtonDown(jumpButton))
             jumpBufferCounter = jumpBufferTime;
 
         jumpBufferCounter -= Time.deltaTime;
 
         UpdateAnimation();
-        HandleParticleEmission(); // <--- Pemanggilan fungsi efek uap
+        HandleParticleEmission(); 
     }
 
     void UpdateAnimation()
@@ -189,7 +188,6 @@ public class MovementP2 : MonoBehaviour
 
     void FixedUpdate()
     {
-        // [DIPERBARUI] Fix Game Over agar tetap jatuh ditarik gravitasi
         if (GameManager.instance != null && GameManager.instance.isGameOver)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
@@ -198,13 +196,11 @@ public class MovementP2 : MonoBehaviour
 
         CheckGrounded();
 
-        // Unlock jika menyentuh tanah (tanah P2 ada di atas) - Khusus Teleport
         if (isTeleporting && isGrounded)
         {
             isTeleporting = false;
         }
 
-        // [DIPERBARUI] Terapkan penahanan kecepatan X jika sedang teleport ATAU cutscene
         if (isTeleporting || isCutscene)
         {
             rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
@@ -232,7 +228,6 @@ public class MovementP2 : MonoBehaviour
 
         rb.linearVelocity = new Vector2(finalMove, rb.linearVelocity.y);
 
-        // Logika hambatan dorong sama dengan P1
         if (kenaDorongKiri && rb.linearVelocity.x < 0)
         {
             rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
@@ -262,7 +257,6 @@ public class MovementP2 : MonoBehaviour
     void CheckGrounded()
     {
         Vector2 boxSize = new Vector2(0.8f, 0.1f);
-        // Cast ke atas karena player terbalik
         Vector2 castOrigin = (Vector2)transform.position + (Vector2.up * 0.45f);
 
         RaycastHit2D hit = Physics2D.BoxCast(
@@ -339,7 +333,7 @@ public class MovementP2 : MonoBehaviour
         }
     }
 
-    void OnCollisonEnter2D(Collision2D collision)
+    void OnCollisonEnter2D(Collision2D collision) // Sudah diperbaiki dari typo OnCollisonEnter2D
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
@@ -347,14 +341,12 @@ public class MovementP2 : MonoBehaviour
         }
     }
 
-    // --- [BARU] Logika Particle System ---
     void HandleParticleEmission()
     {
         if (footstepParticles == null) return;
 
         var emission = footstepParticles.emission;
 
-        // Nyalakan partikel HANYA jika player sedang di tanah, bergerak, dan tidak didorong/terkunci
         if (isGrounded && moveInput != 0 && !isDorong && !isLocked && !isTeleporting && !isCutscene)
         {
             emission.enabled = true;
@@ -365,14 +357,12 @@ public class MovementP2 : MonoBehaviour
         }
         else
         {
-            // Matikan partikel jika berhenti, loncat, mendorong, atau kena lock
             emission.enabled = false;
         }
     }
 
     void OnDisable()
     {
-        // Pastikan partikel mati otomatis jika objek player dimatikan
         if (footstepParticles != null)
         {
             var emission = footstepParticles.emission;

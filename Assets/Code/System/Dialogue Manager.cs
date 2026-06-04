@@ -5,13 +5,15 @@ using System.Collections;
 
 public class DialogueManager : MonoBehaviour
 {
+    [Header("Input Setup")]
+    public string dialogueNextInput = "Submit"; // Pakai 'Submit' agar bisa Space atau tombol X Controller
+
     [Header("UI Player 1 (Kiri)")]
     public GameObject panelP1;
     public TextMeshProUGUI textP1;
     public Image charImageP1;
 
     [Header("UI Player 2 (Kanan)")]
-    [Tooltip("Boleh dikosongkan jika level hanya 1 player")]
     public GameObject panelP2;
     public TextMeshProUGUI textP2;
     public Image charImageP2;
@@ -27,9 +29,8 @@ public class DialogueManager : MonoBehaviour
 
     public bool selesai = false;
     private bool isTyping = false;
-    private bool isDialogueActive = false; // BARU: Menandakan dialog sedang ada di layar
+    private bool isDialogueActive = false; 
 
-    // BARU: Variabel pelacak untuk fitur Skip
     private string currentFullText = "";
     private TextMeshProUGUI currentTextUI;
     private Coroutine typingCoroutine;
@@ -37,19 +38,17 @@ public class DialogueManager : MonoBehaviour
 
     void Update()
     {
-        // Mengecek input Space hanya ketika dialog sedang aktif
-        if (isDialogueActive && Input.GetKeyDown(KeyCode.Space))
+        // [DIPERBARUI] Mendukung Controller & Keyboard Space
+        if (isDialogueActive && (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown(dialogueNextInput)))
         {
             if (isTyping)
             {
-                // SKIP TAHAP 1: Jika sedang ngetik, langsung tampilkan semua teks
                 if (typingCoroutine != null) StopCoroutine(typingCoroutine);
                 if (currentTextUI != null) currentTextUI.text = currentFullText;
-                isTyping = false; // Membiarkan AutoClose mulai menghitung jeda tutup
+                isTyping = false; 
             }
             else
             {
-                // SKIP TAHAP 2: Jika teks sudah lengkap (sedang jeda AutoClose), langsung tutup
                 if (autoCloseCoroutine != null) StopCoroutine(autoCloseCoroutine);
                 CloseDialogue();
             }
@@ -67,7 +66,6 @@ public class DialogueManager : MonoBehaviour
 
         if (blurEffect != null) blurEffect.SetActive(true);
 
-        // LOGIKA DINAMIS: Cek apakah P2 ada, jika tidak ada selalu arahkan ke P1
         bool useP1 = isPlayer1 || panelP2 == null;
 
         if (useP1)
@@ -105,16 +103,11 @@ public class DialogueManager : MonoBehaviour
 
             if (charCounter % playSoundEveryXChars == 0)
             {
-                if (AudioManager.instance != null)
-                {
-                    AudioManager.instance.PlaySFX(typingSFXName);
-                }
+                if (AudioManager.instance != null) AudioManager.instance.PlaySFX(typingSFXName);
             }
 
-            if (fullText[i] == ' ')
-                yield return new WaitForSeconds(typingSpeed * 2);
-            else
-                yield return new WaitForSeconds(typingSpeed);
+            if (fullText[i] == ' ') yield return new WaitForSeconds(typingSpeed * 2);
+            else yield return new WaitForSeconds(typingSpeed);
         }
 
         isTyping = false;
@@ -135,7 +128,7 @@ public class DialogueManager : MonoBehaviour
         if (panelP2 != null) panelP2.SetActive(false);
         if (blurEffect != null) blurEffect.SetActive(false);
 
-        isDialogueActive = false; // Dialog sudah tidak ada di layar
+        isDialogueActive = false; 
         selesai = true;
     }
 }

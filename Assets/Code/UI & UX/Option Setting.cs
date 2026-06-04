@@ -1,43 +1,54 @@
 using UnityEngine;
+using UnityEngine.EventSystems; // [BARU] Wajib untuk Controller
 
 public class OptionSetting : MonoBehaviour
 {
-    //Option setting lumayan ribet karea memerlukan banya script untuk mengatur settingan yang ada.
-    public GameObject Resolution;//ini kalau mau pakai resollution di setting dan harus edit juga ya di project manager biar bisa tampil
-    public GameObject Graphic;//ini uga sama dengan resolution harus di atyr duku di project manager
-
-
-    //ini untuk atur audio manager ini juga lumayan ribet tapi gak perlu ke project manager (biasanya isinya cuma bgm dan sound effect untuk mengatur volume)
+    [Header("Menu Panels")]
+    public GameObject Resolution;
+    public GameObject Graphic;
     public GameObject BGM;
     public GameObject SFX;
 
-    //selesai
+    [Header("Controller Focus Setup")]
+    [Tooltip("Masukkan Dropdown Resolution ke sini")]
+    public GameObject firstVideoSelected; 
+    [Tooltip("Masukkan Slider BGM ke sini")]
+    public GameObject firstAudioSelected; 
 
-    private void Start()
+    // Gunakan OnEnable agar saat panel Setting pertama kali dibuka dari Main Menu/Pause,
+    // dia langsung menyorot menu resolusi.
+    private void OnEnable()
     {
-        Tampilkan_Resolustion();//ini untuk menampilkan apa yang ingin di tampilkan pertama kali ketika masuk ke menu setting (ini bisa di atur sesuai keinginan ya)
+        Tampilkan_Resolustion();
     }
 
-    public void Tampilkan_Resolustion()//ini untuk menampilkan resolustion ketika masuk ke menu setting
+    public void Tampilkan_Resolustion()
     {
-        //ini yang tapil yang true saja yah
         Resolution.SetActive(true);
         Graphic.SetActive(true);
-        //ini flase karena agar menu yang lain tidak tampil ketika masuk ke menu setting (ini bisa di atur sesuai keinginan ya)
         BGM.SetActive(false);
         SFX.SetActive(false);
+
+        // [BARU] Arahkan kursor controller ke Dropdown Resolution
+        if (firstVideoSelected != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(firstVideoSelected);
+        }
     }
 
-    public void Tampilkan_Auidio()//ini untuk aduio (kenapa bikin 2? agar tidak tabrakan dengan menu resolution)
+    public void Tampilkan_Auidio()
     {
-        //ini yang tapil yang true saja yah
         BGM.SetActive(true);
         SFX.SetActive(true);
-        //ini flase karena agar menu yang lain tidak tampil ketika masuk ke menu setting (ini bisa di atur sesuai keinginan ya)
         Resolution.SetActive(false);
         Graphic.SetActive(false);
+
+        // [BARU] Arahkan kursor controller ke Slider BGM
+        if (firstAudioSelected != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(firstAudioSelected);
+        }
     }
-
-
 }
-

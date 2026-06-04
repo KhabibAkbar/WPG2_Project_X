@@ -1,9 +1,17 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems; // [BARU]
 
 public class PauseManager : MonoBehaviour
 {
     public static PauseManager instance;
+
+    [Header("UI Controller Setup")]
+    public GameObject pauseFirstButton; // Tombol Resume
+    public GameObject settingsFirstButton; // Tombol pertama di menu Setting
+
+    [Header("Input Setup")]
+    public string pauseInputController = "Pause_Action"; // Untuk tombol Start/Options controller
 
     public GameObject panelPause;
     public GameObject panelSettings;
@@ -18,26 +26,20 @@ public class PauseManager : MonoBehaviour
     void Start()
     {
         panelPause.SetActive(false);
-
-        if (panelSettings != null)
-            panelSettings.SetActive(false);
+        if (panelSettings != null) panelSettings.SetActive(false);
     }
 
     void Update()
     {
-        if (GameManager.instance != null && GameManager.instance.isGameOver)
-            return;
+        if (GameManager.instance != null && GameManager.instance.isGameOver) return;
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        // [DIPERBARUI] Mendukung Escape (Keyboard) dan Tombol Start (Controller)
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown(pauseInputController))
         {
-            if (AudioManager.instance != null)
-        {
-            AudioManager.instance.PlaySFX("Button Click"); 
-        }
-            if (isPaused)
-                ResumeGame();
-            else
-                PauseGame();
+            if (AudioManager.instance != null) AudioManager.instance.PlaySFX("Button Click"); 
+            
+            if (isPaused) ResumeGame();
+            else PauseGame();
         }
     }
 
@@ -46,14 +48,19 @@ public class PauseManager : MonoBehaviour
         panelPause.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
+
+        // [BARU] Sorot tombol Resume
+        if (pauseFirstButton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(pauseFirstButton);
+        }
     }
 
     public void ResumeGame()
     {
         panelPause.SetActive(false);
-
-        if (panelSettings != null)
-            panelSettings.SetActive(false);
+        if (panelSettings != null) panelSettings.SetActive(false);
 
         Time.timeScale = 1f;
         isPaused = false;
@@ -61,43 +68,49 @@ public class PauseManager : MonoBehaviour
 
     public void RestartGame()
     {
-        // 1. Matikan waktu
         Time.timeScale = 1f;
-
-        // 2. Beritahu AudioManager untuk blokir SEMUA SFX sekarang juga
         if (AudioManager.instance != null)
         {
             AudioManager.instance.blockAllSFX = true;
             AudioManager.instance.StopLoopingSFX();
         }
 
-        // 3. (Opsional) Beritahu semua Platform untuk diam
         InjectTriggerSingle[] allPlatforms = FindObjectsOfType<InjectTriggerSingle>();
-        foreach (var p in allPlatforms)
-        {
-            p.PrepareForSceneTransition();
-        }
+        foreach (var p in allPlatforms) p.PrepareForSceneTransition();
 
-        // 4. Baru pindah scene (Restart)
         FadeManager.instance.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void OpenSettings()
     {
         if (panelSettings != null)
+        {
             panelSettings.SetActive(true);
+            
+            // [BARU] Sorot tombol pertama di dalam panel setting
+            if (settingsFirstButton != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+                EventSystem.current.SetSelectedGameObject(settingsFirstButton);
+            }
+        }
     }
 
     public void BackToPauseMenu()
     {
-        if (panelSettings != null)
-            panelSettings.SetActive(false);
+        if (panelSettings != null) panelSettings.SetActive(false);
+        
+        // [BARU] Saat tutup setting, sorot kembali tombol Resume (atau tombol setting di menu utama pause)
+        if (pauseFirstButton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(pauseFirstButton);
+        }
     }
 
     public void CloseSettings()
     {
-        if (panelSettings != null)
-            panelSettings.SetActive(false);
+        BackToPauseMenu(); // Gunakan logika yang sama
     }
 
     public void MainMenu()

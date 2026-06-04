@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 public class BattleController : MonoBehaviour
 {
     [Header("UI References")]
-    public GameObject mainUIContainer; 
+    public GameObject[] gameplayUIElements; 
     public ComboUI comboUI;
     public DefenseSystem defenseSystem;
     public Slider playerTimerSlider;
@@ -76,7 +76,21 @@ public class BattleController : MonoBehaviour
     private int playerYangLagiNgetik = 1;
     private List<KeyCode> currentRandomCombo = new List<KeyCode>();
     private int currentInputIndex = 0;
+    
+    // KeyCode asli dipertahankan agar UI Combo tidak error
     private KeyCode[] possibleKeys = { KeyCode.W, KeyCode.A, KeyCode.D, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow };
+
+    // --- BARU: Pemetaan KeyCode ke nama Input Manager Controller ---
+    private Dictionary<KeyCode, string> inputMapping = new Dictionary<KeyCode, string>()
+    {
+        { KeyCode.W, "P1_ComboW" },
+        { KeyCode.A, "P1_ComboA" },
+        { KeyCode.D, "P1_ComboD" },
+        { KeyCode.DownArrow, "P2_ComboDown" },
+        { KeyCode.LeftArrow, "P2_ComboLeft" },
+        { KeyCode.RightArrow, "P2_ComboRight" },
+        { KeyCode.UpArrow, "P2_ComboUp" } // Jaga-jaga jika digunakan
+    };
 
     [Header("Animators")]
     public Animator p1Animator; 
@@ -91,9 +105,22 @@ public class BattleController : MonoBehaviour
     public string phaseTransitionSFX = "Transisi";
     public string pumpSFX = "Transisi"; 
 
-    [Header("Spawn Points")]
+    [Header("Panel Audio Settings")]
+    public string winPanelSFX = "WinSound";
+    public string losePanelSFX = "LoseSound";
+
+    [Header("Character Home Spawn Points (WAJIB DIISI)")]
+    public Transform player1SpawnPoint;
+    public Transform player2SpawnPoint;
+
+    [Header("Spawn Points (Floating Text)")]
     public Transform missSpawnPoint;
     public Transform perfectSpawnPoint;
+    public Transform comboSpawnPoint; 
+
+    private bool p2LeftLast = false;
+    private bool p2RightLast = false;
+    private bool p2DownLast = false;
 
     void Start()
     {
@@ -112,13 +139,29 @@ public class BattleController : MonoBehaviour
 
         currentPhase = 12; 
 
+        if (player1Obj != null && player1SpawnPoint != null) player1Obj.transform.position = player1SpawnPoint.position;
+        if (player2Obj != null && player2SpawnPoint != null) player2Obj.transform.position = player2SpawnPoint.position;
+
         UpdateHeartUI();
         UpdatePlayerPortraits();
 
         if (enemyUIPortrait != null && stage1Portrait != null) 
             enemyUIPortrait.sprite = stage1Portrait;
 
+        SetGameplayHUDActive(false);
+
         if (currentEnemy != null) StartCoroutine(PlayReadyGo());
+    }
+
+    void SetGameplayHUDActive(bool active)
+    {
+        if (gameplayUIElements != null)
+        {
+            foreach (GameObject element in gameplayUIElements)
+            {
+                if (element != null) element.SetActive(active);
+            }
+        }
     }
 
     bool CheckEnemyStage()
@@ -172,7 +215,20 @@ public class BattleController : MonoBehaviour
             comboLength += 2; 
             successfulAttackCount = 0; 
 
-            Vector3 spawnPos = perfectSpawnPoint != null ? perfectSpawnPoint.position : comboUI.transform.position;
+            Vector3 spawnPos;
+            if (comboSpawnPoint != null)
+            {
+                spawnPos = comboSpawnPoint.position;
+            }
+            else if (perfectSpawnPoint != null)
+            {
+                spawnPos = perfectSpawnPoint.position + new Vector3(0f, 1.5f, 0f);
+            }
+            else
+            {
+                spawnPos = comboUI.transform.position;
+            }
+
             SpawnFloatingText("COMBO ATTACK!", new Color(0f, 1f, 1f), spawnPos);
         }
         else
@@ -186,19 +242,76 @@ public class BattleController : MonoBehaviour
         comboUI.SetupComboUI(currentRandomCombo);
     }
 
+    // --- DIPERBARUI: HandleAttackInput dengan Controller Support ---
     void HandleAttackInput()
     {
         if (!isPlayerTurn || isGameOver || currentRandomCombo == null || currentRandomCombo.Count == 0) return;
-        if (!Input.anyKeyDown || Input.GetMouseButtonDown(0)) return;
 
-        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
+        bool anyComboKeyPressed = false;
+        KeyCode pressedKey = KeyCode.None;
+
+        // 1. CEK INPUT PLAYER 1 (Keyboard WAD atau Controller Tombol Shapes PS)
+        foreach (KeyCode key in possibleKeys)
+        {
+            if (inputMapping.ContainsKey(key) && Input.GetButtonDown(inputMapping[key]))
+            {
+                // Proteksi: Pastikan yang merespons hanya input P1_Combo
+                if (inputMapping[key].StartsWith("P1_"))
+                {
+                    anyComboKeyPressed = true;
+                    pressedKey = key;
+                    break;
+                }
+            }
+        }
+
+        // 2. CEK INPUT PLAYER 2 (Jika Player 1 tidak menekan apa pun)
+        if (!anyComboKeyPressed)
+        {
+            // Baca nilai D-Pad Controller 2 dari Input Manager (Axis 6 & 7)
+            float p2DpadX = Input.GetAxisRaw("P2_DpadX");
+            float p2DpadY = Input.GetAxisRaw("P2_DpadY");
+
+            // Simulasikan GetButtonDown untuk D-Pad Controller
+            bool p2DpadLeftDown = (p2DpadX < -0.5f) && !p2LeftLast;
+            bool p2DpadRightDown = (p2DpadX > 0.5f) && !p2RightLast;
+            bool p2DpadDownDown = (p2DpadY < -0.5f) && !p2DownLast;
+
+            // Perbarui status penahanan D-Pad untuk frame berikutnya
+            p2LeftLast = (p2DpadX < -0.5f);
+            p2RightLast = (p2DpadX > 0.5f);
+            p2DownLast = (p2DpadY < -0.5f);
+
+            // Cek apakah Keyboard Arrow atau D-Pad Controller ditekan
+            if (Input.GetButtonDown("P2_ComboLeft") || p2DpadLeftDown)
+            {
+                anyComboKeyPressed = true;
+                pressedKey = KeyCode.LeftArrow;
+            }
+            else if (Input.GetButtonDown("P2_ComboRight") || p2DpadRightDown)
+            {
+                anyComboKeyPressed = true;
+                pressedKey = KeyCode.RightArrow;
+            }
+            else if (Input.GetButtonDown("P2_ComboDown") || p2DpadDownDown)
+            {
+                anyComboKeyPressed = true;
+                pressedKey = KeyCode.DownArrow;
+            }
+        }
+
+        // Abaikan jika tidak ada tombol valid yang ditekan frame ini
+        if (!anyComboKeyPressed) return;
+
+        // Deteksi player mana yang sedang aktif mengetik combo
+        if (pressedKey == KeyCode.W || pressedKey == KeyCode.A || pressedKey == KeyCode.D)
             playerYangLagiNgetik = 1;
-        else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.RightArrow))
+        else if (pressedKey == KeyCode.UpArrow || pressedKey == KeyCode.DownArrow || pressedKey == KeyCode.LeftArrow || pressedKey == KeyCode.RightArrow)
             playerYangLagiNgetik = 2;
 
         KeyCode expectedKey = currentRandomCombo[currentInputIndex];
 
-        if (Input.GetKeyDown(expectedKey))
+        if (pressedKey == expectedKey)
         {
             if (AudioManager.instance != null) AudioManager.instance.PlaySFX("SFC Clik");
             comboUI.UpdateKeyColor(currentInputIndex);
@@ -249,15 +362,17 @@ public class BattleController : MonoBehaviour
                 SpawnFloatingText("MISS!", Color.red, missSpawnPoint.position);
             else
                 SpawnFloatingText("MISS!", Color.red, comboUI.transform.position);
+                
             if (AudioManager.instance != null) AudioManager.instance.PlaySFX("Miss");
             currentInputIndex = 0;
             comboUI.SetupComboUI(currentRandomCombo);
         }
     }
+    // -------------------------------------------------------------
 
     IEnumerator EnemyStageTransition()
     {
-        if (mainUIContainer != null) mainUIContainer.SetActive(false);
+        SetGameplayHUDActive(false);
         comboUI.gameObject.SetActive(false);
         playerTimerSlider.gameObject.SetActive(false);
 
@@ -397,8 +512,7 @@ public class BattleController : MonoBehaviour
             yield return new WaitForSeconds(1.5f);
         }
 
-        if (mainUIContainer != null) mainUIContainer.SetActive(true);
-
+        SetGameplayHUDActive(true);
         StartEnemyTurn();
     }
 
@@ -423,7 +537,6 @@ public class BattleController : MonoBehaviour
         if (defenseSystem != null)
         {
             defenseSystem.gameObject.SetActive(true);
-
             enemyAttacksLeft = (enemyCurrentStage == 3) ? 2 : 1;
             defenseSystem.ActivateDefense();
         }
@@ -530,6 +643,7 @@ public class BattleController : MonoBehaviour
 
         cutscenePanelGroup.gameObject.SetActive(false);
         isStartingCutscene = false;
+        SetGameplayHUDActive(true);
         StartPlayerTurn();
     }
 
@@ -560,6 +674,9 @@ public class BattleController : MonoBehaviour
     IEnumerator EfekMaju(Transform playerTr, Animator anim, int noPlayer, bool isFinisher)
     {
         Vector3 posAwal = playerTr.position;
+        if (noPlayer == 1 && player1SpawnPoint != null) posAwal = player1SpawnPoint.position;
+        else if (noPlayer == 2 && player2SpawnPoint != null) posAwal = player2SpawnPoint.position;
+
         Transform enemyTr = defenseSystem.enemyObj.transform;
         SpriteRenderer pSR = playerTr.GetComponent<SpriteRenderer>();
         SpriteRenderer eSR = enemyTr.GetComponent<SpriteRenderer>();
@@ -618,6 +735,10 @@ public class BattleController : MonoBehaviour
 
     IEnumerator WinSequence()
     {
+        SetGameplayHUDActive(false);
+        comboUI.gameObject.SetActive(false);
+        playerTimerSlider.gameObject.SetActive(false);
+
         yield return new WaitForSeconds(0.2f);
 
         if (defenseSystem != null && defenseSystem.enemyObj != null)
@@ -639,7 +760,8 @@ public class BattleController : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         if (winPanel != null) winPanel.SetActive(true);
-        if (AudioManager.instance != null) AudioManager.instance.PlaySFX("WinSound");
+        if (AudioManager.instance != null && !string.IsNullOrEmpty(winPanelSFX)) 
+            AudioManager.instance.PlaySFX(winPanelSFX);
         
         yield return new WaitForSeconds(2f);
         
@@ -658,19 +780,28 @@ public class BattleController : MonoBehaviour
     IEnumerator LoseSequence()
     {
         if (losePanel != null) losePanel.SetActive(true);
-        
-        // --- FIX: Ubah ke Realtime agar tidak membeku saat Hit Stop ---
         yield return new WaitForSecondsRealtime(2f);
-        
         if (losePanel != null) losePanel.SetActive(false);
         
         if (GameManager.instance != null)
         {
             GameManager.instance.GameOver();
         }
-        else if (gameOverPanel != null)
+        
+        if (gameOverPanel != null)
         {
-            gameOverPanel.SetActive(true); 
+            Transform indukPalingAtas = gameOverPanel.transform;
+            while (indukPalingAtas.parent != null && indukPalingAtas.parent.name != "UI Manager")
+            {
+                indukPalingAtas = indukPalingAtas.parent;
+            }
+            
+            if (indukPalingAtas != null) 
+            {
+                indukPalingAtas.gameObject.SetActive(true);
+            }
+
+            gameOverPanel.SetActive(true);
         }
     }
 
@@ -793,7 +924,6 @@ public class BattleController : MonoBehaviour
             elapsed += Time.unscaledDeltaTime; 
             yield return null;
         }
-
         mainCam.transform.localPosition = originalPos;
     }
 
@@ -834,7 +964,6 @@ public class BattleController : MonoBehaviour
         }
     }
 
-    // --- DI SINI FUNGSI UTAMA CINEMATIC ACTION PAN ---
     public IEnumerator CinematicActionPan(Vector3 targetPos, float zoomMultiplier, float duration)
     {
         Camera mainCam = Camera.main;
@@ -870,7 +999,7 @@ public class BattleController : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime; 
             float t = elapsed / duration;
-            t = 1f - Mathf.Pow(1f - t, 3f); // Ease-Out
+            t = 1f - Mathf.Pow(1f - t, 3f); 
 
             mainCam.transform.localPosition = Vector3.Lerp(startPos, finalTargetPos, t);
             

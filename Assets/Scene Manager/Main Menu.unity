@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 61495169}
   - component: {fileID: 61495171}
   - component: {fileID: 61495170}
+  - component: {fileID: 61495172}
   m_Layer: 5
   m_Name: Option Credit
   m_TagString: Untagged
@@ -197,6 +198,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 61495168}
   m_CullTransparentMesh: 1
+--- !u!114 &61495172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 61495168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 141a567fed5b51e4d901d4d7f6723a35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UICredits
+  backButton: {fileID: 243390111}
+  isSeparateScene: 0
+  mainMenuPanel: {fileID: 378743620}
+  creditButtonInMainMenu: {fileID: 1523062132}
 --- !u!1 &70996008
 GameObject:
   m_ObjectHideFlags: 0
@@ -1010,6 +1027,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9fb9b08bd480644690a1769ee728a5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIMainMenu
+  firstSelectedButton: {fileID: 0}
   mainUIBackground: {fileID: 1743192930}
   zoomMultiplier: 1.5
   animationDuration: 1.2
@@ -1714,10 +1732,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1330038997}
+    m_SelectOnDown: {fileID: 1090344657}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -2506,12 +2524,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_Dropdown
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnLeft: {fileID: 1383716474}
+    m_SelectOnRight: {fileID: 1602144886}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -2811,10 +2829,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 680787899}
+    m_SelectOnDown: {fileID: 1330038997}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -3501,12 +3519,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1383716474}
+    m_SelectOnDown: {fileID: 1479709641}
     m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnRight: {fileID: 680787899}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -3649,12 +3667,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1479709641}
+    m_SelectOnDown: {fileID: 1330038997}
     m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnRight: {fileID: 986782579}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -3969,10 +3987,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1330038997}
+    m_SelectOnDown: {fileID: 1383716474}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -4859,6 +4877,8 @@ MonoBehaviour:
   Graphic: {fileID: 1757478847}
   BGM: {fileID: 680787897}
   SFX: {fileID: 1090344656}
+  firstVideoSelected: {fileID: 0}
+  firstAudioSelected: {fileID: 0}
 --- !u!114 &1614894554
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4901,8 +4921,8 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 53b1e19669635914fb219eb9035ea194, type: 3}
-  m_PlayOnAwake: 1
+  m_Resource: {fileID: 8300000, guid: df9ac3073835df04a8a0198df349d289, type: 3}
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 1
@@ -5914,7 +5934,7 @@ MonoBehaviour:
     volumeModifier: 1
   FightingBGM:
     clip: {fileID: 8300000, guid: 24143c03babeb4e459ea2956bab3650a, type: 3}
-    volumeModifier: 1
+    volumeModifier: 0.75
   sfxClips:
   - clip: {fileID: 8300000, guid: 8c88fdabdceebb44c824e38a1eb92b06, type: 3}
     volumeModifier: 1
@@ -5973,6 +5993,10 @@ MonoBehaviour:
   - clip: {fileID: 8300000, guid: 890d5e385faae0740a4fc499a8ece330, type: 3}
     volumeModifier: 1
   - clip: {fileID: 8300000, guid: fb19c0ab41580814a97596695d59cdda, type: 3}
+    volumeModifier: 1
+  - clip: {fileID: 8300000, guid: a6c5a752fc3c895438436663d32c8f2b, type: 3}
+    volumeModifier: 1
+  - clip: {fileID: 8300000, guid: 8584b4db982df134286fbed6ef9a9d93, type: 3}
     volumeModifier: 1
   blockAllSFX: 1
 --- !u!4 &1915857466

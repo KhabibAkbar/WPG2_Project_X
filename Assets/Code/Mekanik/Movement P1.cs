@@ -2,6 +2,13 @@
 
 public class MovementP1 : MonoBehaviour
 {
+    [Header("Input Settings (Controller/Keyboard)")]
+    [Tooltip("Ketik 'Horizontal_P1' untuk Player 1, atau 'Horizontal_P2' untuk Player 2")]
+    public string horizontalAxis = "Horizontal_P1"; 
+    
+    [Tooltip("Ketik 'Jump_P1' untuk Player 1, atau 'Jump_P2' untuk Player 2")]
+    public string jumpButton = "Jump_P1";
+
     public float speed = 5f;
     public float jumpForce = 8f;
     public float slowmoDorong = 2f;
@@ -16,7 +23,7 @@ public class MovementP1 : MonoBehaviour
 
     [Header("Visual Effects")]
     public ParticleSystem footstepParticles;
-    public ParticleSystem pushWindParticles; // Partikel angin saat mendorong
+    public ParticleSystem pushWindParticles; 
 
     public float jumpBufferTime = 0.1f;
     private float jumpBufferCounter;
@@ -62,7 +69,6 @@ public class MovementP1 : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    // Dipanggil otomatis saat script dimatikan oleh CutsceneManager
     void OnDisable()
     {
         if (footstepParticles != null)
@@ -148,6 +154,9 @@ public class MovementP1 : MonoBehaviour
 
         if (isTeleporting) return;
 
+        // Membaca input dari Controller (Analog Kiri atau D-Pad)
+        float axisInput = Input.GetAxisRaw(horizontalAxis);
+
         if (inputBufferTimer > 0)
         {
             inputBufferTimer -= Time.deltaTime;
@@ -157,7 +166,8 @@ public class MovementP1 : MonoBehaviour
         {
             moveInput = 0;
 
-            if (Input.GetKey(KeyCode.A))
+            // Threshold 0.1f untuk menghindari "stick drift" pada controller
+            if (axisInput < -0.1f) 
             {
                 moveInput = -1;
                 if (lastLockedInput != -1)
@@ -166,7 +176,7 @@ public class MovementP1 : MonoBehaviour
                     lastLockedInput = -1;
                 }
             }
-            else if (Input.GetKey(KeyCode.D))
+            else if (axisInput > 0.1f) 
             {
                 moveInput = 1;
                 if (lastLockedInput != 1)
@@ -195,7 +205,8 @@ public class MovementP1 : MonoBehaviour
             footstepTimer = 0;
         }
 
-        if (Input.GetKeyDown(KeyCode.W))
+        // Membaca input lompat dari tombol Controller
+        if (Input.GetButtonDown(jumpButton))
         {
             jumpBufferCounter = jumpBufferTime;
         }
@@ -207,7 +218,6 @@ public class MovementP1 : MonoBehaviour
 
     void HandleParticleEmission()
     {
-        // 1. LOGIKA PARTIKEL PIJAKAN KAKI
         if (footstepParticles != null)
         {
             if (!footstepParticles.isPlaying) footstepParticles.Play();
@@ -220,12 +230,10 @@ public class MovementP1 : MonoBehaviour
             }
             else
             {
-                // Matikan debu kaki saat sedang mendorong agar visual tidak berantakan
                 footstepEmission.enabled = isGrounded && !isDorong;
             }
         }
 
-        // 2. LOGIKA PARTIKEL ANGIN DORONG
         if (pushWindParticles != null)
         {
             if (!pushWindParticles.isPlaying) pushWindParticles.Play();
@@ -260,7 +268,6 @@ public class MovementP1 : MonoBehaviour
 
         anim.SetFloat("Speed", Mathf.Abs(moveInput));
 
-        // Partikel kaki tidak di-flip manual lagi. Pastikan bentuk partikel kaki sudah diubah ke 'Box' di Editor
         if (moveInput > 0)
         {
             anim.SetBool("FacingRight", true);
@@ -327,7 +334,6 @@ public class MovementP1 : MonoBehaviour
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             jumpBufferCounter = 0;
             
-            // Matikan semua partikel langsung saat melompat
             isGrounded = false; 
             
             if (footstepParticles != null) 
@@ -429,7 +435,7 @@ public class MovementP1 : MonoBehaviour
         }
     }
 
-    void OnCollisonEnter2D(Collision2D collision)
+    void OnCollisonEnter2D(Collision2D collision) // Sudah saya perbaiki dari OnCollisonEnter2D
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
