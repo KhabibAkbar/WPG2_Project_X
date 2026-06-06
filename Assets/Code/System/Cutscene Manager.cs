@@ -98,12 +98,12 @@ public class CutsceneManager : MonoBehaviour
             
             if (movementP1 != null) 
             {
-                movementP1.isGroundedForCutscene = false; 
+                movementP1.isGrounded = false; 
                 movementP1.SetCutsceneLock(false); 
             }
 
             float p1Timer = 0f;
-            while (movementP1 != null && !movementP1.isGroundedForCutscene && p1Timer < maxWaitTime)
+            while (movementP1 != null && !movementP1.isGrounded && p1Timer < maxWaitTime)
             {
                 p1Timer += Time.deltaTime;
                 yield return null; 
@@ -130,12 +130,13 @@ public class CutsceneManager : MonoBehaviour
             
             if (movementP2 != null) 
             {
-                movementP2.isGroundedForCutscene = false; 
+                movementP2.isGrounded
+                 = false; 
                 movementP2.SetCutsceneLock(false);
             }
 
             float p2Timer = 0f;
-            while (movementP2 != null && !movementP2.isGroundedForCutscene && p2Timer < maxWaitTime) 
+            while (movementP2 != null && !movementP2.isGrounded && p2Timer < maxWaitTime) 
             {
                 p2Timer += Time.deltaTime;
                 yield return null;

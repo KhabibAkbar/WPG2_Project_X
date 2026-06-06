@@ -1,51 +1,41 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.EventSystems; // Wajib untuk mendukung Controller
+using UnityEngine.EventSystems; 
+using System.Collections; 
 
 public class UICredits : MonoBehaviour
 {
     [Header("UI Controller Setup")]
-    [Tooltip("Masukkan tombol Back/Kembali yang ada di menu Credit")]
     public GameObject backButton;
 
     [Header("Configuration")]
-    [Tooltip("Centang ini jika Credit adalah SCENE TERPISAH. Jangan dicentang jika Credit hanya sebuah PANEL di dalam Main Menu")]
     public bool isSeparateScene = true;
 
     [Header("If Credit is a Panel (Optional)")]
-    [Tooltip("Masukkan GameObject induk Main Menu agar bisa memunculkan tombol menu utama kembali")]
     public GameObject mainMenuPanel;
-    [Tooltip("Masukkan tombol 'Credit' di Main Menu agar kursor kembali menyorot tombol tersebut saat panel ditutup")]
     public GameObject creditButtonInMainMenu;
 
     void Start()
     {
-        // Jika berupa scene terpisah, fokus langsung diberikan saat scene dimuat
-        if (isSeparateScene)
-        {
-            FocusOnBackButton();
-        }
+        if (isSeparateScene) StartCoroutine(FocusOnBackButtonLate());
     }
 
     void OnEnable()
     {
-        // Jika berupa panel di dalam Main Menu, fokus diberikan setiap kali panel aktif
-        if (!isSeparateScene)
-        {
-            FocusOnBackButton();
-        }
+        if (!isSeparateScene) StartCoroutine(FocusOnBackButtonLate());
     }
 
-    private void FocusOnBackButton()
+    private IEnumerator FocusOnBackButtonLate()
     {
-        if (backButton != null)
+        yield return null; 
+        if (backButton != null && EventSystem.current != null)
         {
-            EventSystem.current.SetSelectedGameObject(null); // Bersihkan fokus lama
-            EventSystem.current.SetSelectedGameObject(backButton); // Sorot tombol Back
+            EventSystem.current.SetSelectedGameObject(null); 
+            EventSystem.current.SetSelectedGameObject(backButton); 
         }
     }
 
-    // Fungsi utama untuk kembali ke Main Menu (Hubungkan ke OnClick tombol Back)
+    // Fungsi utama dipanggil oleh tombol Back
     public void BackToMainMenu()
     {
         if (AudioManager.instance != null)
@@ -55,25 +45,35 @@ public class UICredits : MonoBehaviour
 
         if (isSeparateScene)
         {
-            // Opsi 1: Jika berupa scene terpisah, muat ulang scene menu utama
             SceneManager.LoadScene("Main Menu");
         }
         else
         {
-            // Opsi 2: Jika berupa panel, hidupkan kembali menu utama dan matikan panel ini
-            if (mainMenuPanel != null) 
-            {
-                mainMenuPanel.SetActive(true);
-            }
-            
-            // Kembalikan fokus kursor controller ke tombol di Main Menu
-            if (creditButtonInMainMenu != null)
-            {
-                EventSystem.current.SetSelectedGameObject(null);
-                EventSystem.current.SetSelectedGameObject(creditButtonInMainMenu);
-            }
-
-            gameObject.SetActive(false); // Matikan panel credit ini
+            // [DIPERBARUI] Jalankan proses penutupan panel menggunakan Coroutine
+            StartCoroutine(ReturnToMainMenuSequence());
         }
+    }
+
+    // [BARU] Sistem anti-balapan (Race Condition) dengan Main Menu
+    private IEnumerator ReturnToMainMenuSequence()
+    {
+        // 1. Nyalakan panel Main Menu (Ini akan memicu script Main Menu menyorot tombol 'Play')
+        if (mainMenuPanel != null) 
+        {
+            mainMenuPanel.SetActive(true);
+        }
+
+        // 2. Tunggu 1 frame agar script Main Menu selesai beraksi
+        yield return null;
+
+        // 3. Rebut kembali kursornya dan paksa sorot tombol 'Credit'
+        if (creditButtonInMainMenu != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(creditButtonInMainMenu);
+        }
+
+        // 4. Setelah kursor aman di tombol Credit, baru matikan panel Credit ini
+        gameObject.SetActive(false); 
     }
 }
