@@ -627,6 +627,7 @@ GameObject:
   - component: {fileID: 243390114}
   - component: {fileID: 243390113}
   - component: {fileID: 243390116}
+  - component: {fileID: 243390117}
   m_Layer: 5
   m_Name: Back to Main Menu
   m_TagString: Untagged
@@ -760,6 +761,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &243390117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243390111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &257786615
 GameObject:
   m_ObjectHideFlags: 0
@@ -1863,6 +1878,7 @@ GameObject:
   - component: {fileID: 740022443}
   - component: {fileID: 740022442}
   - component: {fileID: 740022445}
+  - component: {fileID: 740022446}
   m_Layer: 5
   m_Name: Exit
   m_TagString: Untagged
@@ -1996,6 +2012,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &740022446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 740022440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &763790531
 GameObject:
   m_ObjectHideFlags: 0
@@ -2266,6 +2296,7 @@ GameObject:
   - component: {fileID: 951813119}
   - component: {fileID: 951813118}
   - component: {fileID: 951813121}
+  - component: {fileID: 951813122}
   m_Layer: 5
   m_Name: Setting
   m_TagString: Untagged
@@ -2399,6 +2430,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &951813122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 951813116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &962870980
 GameObject:
   m_ObjectHideFlags: 0
@@ -3475,7 +3520,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1291398371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3546,6 +3591,7 @@ GameObject:
   - component: {fileID: 1330038998}
   - component: {fileID: 1330038997}
   - component: {fileID: 1330039000}
+  - component: {fileID: 1330039001}
   m_Layer: 5
   m_Name: Audio
   m_TagString: Untagged
@@ -3681,6 +3727,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &1330039001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330038995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &1383716472
 GameObject:
   m_ObjectHideFlags: 0
@@ -3694,6 +3754,7 @@ GameObject:
   - component: {fileID: 1383716475}
   - component: {fileID: 1383716474}
   - component: {fileID: 1383716477}
+  - component: {fileID: 1383716478}
   m_Layer: 5
   m_Name: Resolusi
   m_TagString: Untagged
@@ -3829,6 +3890,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &1383716478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383716472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &1399255218
 GameObject:
   m_ObjectHideFlags: 0
@@ -4016,6 +4091,7 @@ GameObject:
   - component: {fileID: 1479709642}
   - component: {fileID: 1479709641}
   - component: {fileID: 1479709644}
+  - component: {fileID: 1479709645}
   m_Layer: 5
   m_Name: Back to Main Menu
   m_TagString: Untagged
@@ -4149,6 +4225,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &1479709645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1479709639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &1481391956
 GameObject:
   m_ObjectHideFlags: 0
@@ -4374,6 +4464,7 @@ GameObject:
   - component: {fileID: 1523062135}
   - component: {fileID: 1523062134}
   - component: {fileID: 1523062137}
+  - component: {fileID: 1523062138}
   m_Layer: 5
   m_Name: Credit
   m_TagString: Untagged
@@ -4507,6 +4598,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &1523062138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1523062132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &1563866475
 GameObject:
   m_ObjectHideFlags: 0
@@ -5323,6 +5428,7 @@ GameObject:
   - component: {fileID: 1788487410}
   - component: {fileID: 1788487409}
   - component: {fileID: 1788487412}
+  - component: {fileID: 1788487413}
   m_Layer: 5
   m_Name: Play
   m_TagString: Untagged
@@ -5456,6 +5562,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &1788487413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788487407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &1806526333
 GameObject:
   m_ObjectHideFlags: 0
@@ -6578,6 +6698,7 @@ GameObject:
   - component: {fileID: 2061348933}
   - component: {fileID: 2061348932}
   - component: {fileID: 2061348935}
+  - component: {fileID: 2061348936}
   m_Layer: 5
   m_Name: Continue
   m_TagString: Untagged
@@ -6711,6 +6832,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SFXAudio
   sfxName: Button Click
+--- !u!114 &2061348936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061348930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd27f2c7f75f094d8ad15bb8850c34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonScaleEffect
+  scaleMultiplier: 1.1
+  animationSpeed: 15
 --- !u!1 &2071406458
 GameObject:
   m_ObjectHideFlags: 0
