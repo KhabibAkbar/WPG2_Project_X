@@ -10979,9 +10979,9 @@ MonoBehaviour:
   p1Portrait: {fileID: 1569774319}
   p2Portrait: {fileID: 1285631556}
   p1AliveSprite: {fileID: 8702553553726098356, guid: 21af7f9e755d4c748a178ce752b71467, type: 3}
-  p1DeadSprite: {fileID: -4800849515517079705, guid: eedaf4de980c51f4291be710cf0a4e7d, type: 3}
+  p1DeadSprite: {fileID: 21300000, guid: 2fb16807e06d4ff4f95de0ffec0585ac, type: 3}
   p2AliveSprite: {fileID: -8831782959344388550, guid: fa3e6bb376175214ab4ecc7b4ef6db22, type: 3}
-  p2DeadSprite: {fileID: -4800849515517079705, guid: eedaf4de980c51f4291be710cf0a4e7d, type: 3}
+  p2DeadSprite: {fileID: 21300000, guid: f0eb8ae07a85e25428344efa49e3f54f, type: 3}
   cutscenePanelGroup: {fileID: 709016903}
   readyImage: {fileID: 217284474}
   goImage: {fileID: 1081845155}
